@@ -6197,6 +6197,17 @@ const UI = {
           <button class="btn btn-outline btn-block" id="importCategoriesCsv" style="margin-bottom:8px;">从 CSV 导入分类</button>
           <div style="font-size:12px;color:var(--text-tertiary);margin-top:8px;">导入将追加数据，不会覆盖现有数据；CSV格式需与导出格式一致</div>
         </div>
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title" style="margin-bottom:12px;">跨环境同步（Safari ↔ 主屏幕书签）</div>
+          <button class="btn btn-outline btn-block" id="genSyncCode" style="margin-bottom:8px;">生成同步码（复制后粘贴到另一端）</button>
+          <div id="syncCodeOutput" style="display:none;margin-bottom:8px;">
+            <textarea id="syncCodeText" readonly style="width:100%;height:80px;font-size:10px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-page);word-break:break-all;"></textarea>
+            <button class="btn btn-primary btn-block" id="copySyncCode" style="margin-top:4px;">复制同步码</button>
+          </div>
+          <textarea id="syncCodeInput" placeholder="在此粘贴另一端生成的同步码…" style="width:100%;height:80px;font-size:11px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-page);margin-bottom:8px;word-break:break-all;"></textarea>
+          <button class="btn btn-primary btn-block" id="mergeSyncCode">合并同步（不覆盖现有数据）</button>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;line-height:1.5;">在 Safari 里点"生成同步码"→复制→切到主屏幕书签粘贴→点"合并同步"。数据按版本号自动去重。</div>
+        </div>
         <div class="card">
           <div class="card-title" style="margin-bottom:12px;color:var(--danger);">危险操作</div>
           <button class="btn btn-danger btn-block" id="clearAllData">清空所有数据</button>
@@ -6224,6 +6235,19 @@ const UI = {
       document.getElementById('importGoalsFile').onchange = (e) => this.importGoalsCsv(e.target.files[0]);
       document.getElementById('importCategoriesCsv').onclick = () => document.getElementById('importCategoriesFile').click();
       document.getElementById('importCategoriesFile').onchange = (e) => this.importCategoriesCsv(e.target.files[0]);
+      // 跨环境同步码
+      document.getElementById('genSyncCode').onclick = () => this.generateSyncCode();
+      document.getElementById('copySyncCode').onclick = () => {
+        const ta = document.getElementById('syncCodeText');
+        ta.select();
+        try { document.execCommand('copy'); Util.toast('已复制，去另一端粘贴'); } catch(e) { Util.toast('请手动全选复制'); }
+      };
+      document.getElementById('mergeSyncCode').onclick = async () => {
+        const code = document.getElementById('syncCodeInput').value.trim();
+        if (!code) { Util.toast('请先粘贴同步码'); return; }
+        const ok = await this.mergeSyncCode(code);
+        if (ok) { Util.toast('同步完成'); document.getElementById('syncCodeInput').value = ''; }
+      };
       document.getElementById('clearAllData').onclick = () => {
         const modules = [
           { key: 'transactions', label: '所有流水' },
@@ -6374,6 +6398,80 @@ const UI = {
     };
     this._showDownloadLink('记账备份_' + Util.today() + '.json', JSON.stringify(data, null, 2), 'application/json');
     return data;
+  },
+
+  // 生成紧凑同步码（base64 JSON）
+  generateSyncCode() {
+    const data = {
+      t: Store.state.transactions,
+      a: Store.state.accounts,
+      c: Store.state.categories,
+      l: Store.state.ledgers,
+      b: Store.state.budgets,
+      g: Store.state.goals,
+      ga: Store.state.goalAllocations,
+      r: Store.state.receivables,
+      p: Store.state.payables,
+      bi: Store.state.bills,
+      i: Store.state.installments,
+      tg: Store.state.tags,
+      tp: Store.state.templates,
+      rp: Store.state.renqingPersons || []
+    };
+    const json = JSON.stringify(data);
+    let code;
+    try { code = btoa(unescape(encodeURIComponent(json))); }
+    catch(e) { code = btoa(json); }
+    document.getElementById('syncCodeOutput').style.display = 'block';
+    document.getElementById('syncCodeText').value = code;
+    Util.toast('同步码已生成，点复制');
+  },
+
+  // 合并同步码（LWW，不覆盖）
+  async mergeSyncCode(code) {
+    let data;
+    try {
+      const json = decodeURIComponent(escape(atob(code.trim())));
+      data = JSON.parse(json);
+    } catch(e) {
+      try { data = JSON.parse(code.trim()); }
+      catch(e2) { Util.toast('同步码无效'); return false; }
+    }
+    const map = {
+      transactions: 't', accounts: 'a', categories: 'c', ledgers: 'l',
+      budgets: 'b', goals: 'g', goalAllocations: 'ga', receivables: 'r',
+      payables: 'p', bills: 'bi', installments: 'i', tags: 'tg',
+      templates: 'tp', renqingPersons: 'rp'
+    };
+    let added = 0, updated = 0;
+    for (const [table, key] of Object.entries(map)) {
+      const incoming = data[key] || [];
+      if (!incoming.length) continue;
+      const existing = Store.state[table] || [];
+      const existingMap = {};
+      existing.forEach(r => { existingMap[r.id] = r; });
+      for (const row of incoming) {
+        const local = existingMap[row.id];
+        if (!local) {
+          // 新记录，直接插入
+          existing.push(row);
+          try { await DB.put(table, row); } catch(e) {}
+          added++;
+        } else {
+          // 已有，按版本号 LWW
+          const lv = local.version || 0;
+          const rv = row.version || 0;
+          if (rv > lv) {
+            Object.assign(local, row);
+            try { await DB.put(table, row); } catch(e) {}
+            updated++;
+          }
+        }
+      }
+    }
+    try { this.renderHome(); this.renderTransactions(); this.renderAssets(); } catch(e) {}
+    Util.toast(`同步完成：新增 ${added} 条，更新 ${updated} 条`);
+    return true;
   },
 
   _showDownloadLink(filename, content, mimeType) {
