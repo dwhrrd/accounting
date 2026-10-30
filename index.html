@@ -1296,6 +1296,73 @@ body.dark[data-style="handdrawn"] .type-switch {
   border: 1.5px solid var(--border);
   font-weight: 500;
 }
+/* 数据管理页统一按钮 */
+.dm-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  border: none;
+  cursor: pointer;
+}
+.dm-btn-primary {
+  background: linear-gradient(135deg, var(--primary-light), var(--primary));
+  color: #fff;
+  box-shadow: 0 3px 0 var(--primary-dark);
+}
+.dm-btn-primary:active {
+  box-shadow: 0 1px 0 var(--primary-dark);
+  transform: translateY(2px);
+}
+.dm-btn-outline {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+}
+.dm-btn-outline:active {
+  background: var(--primary-bg);
+  color: var(--primary-dark);
+  transform: scale(0.98);
+}
+.dm-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+.dm-collapse-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+/* 数据管理页 iOS 极简列表行 */
+.data-action-item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  font-size: 14px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light, #f0ece4);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.data-action-item:last-child {
+  border-bottom: none;
+}
+.data-action-item:active {
+  background: var(--primary-bg);
+}
+.data-action-item .dm-row-arrow {
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
 [data-style="handdrawn"] #txDateToday {
   border-radius: var(--radius-full) !important;
   background: var(--primary-bg);
@@ -5530,54 +5597,54 @@ const UI = {
       <div style="padding:16px;">
         <!-- 核心操作区 -->
         <div class="card" style="margin-bottom:12px;padding:16px;">
-          <div style="font-size:15px;font-weight:700;margin-bottom:12px;">备份与恢复</div>
-          <button class="btn btn-primary btn-block" id="exportJson" style="margin-bottom:8px;padding:14px;font-size:15px;">📥 导出完整备份 JSON</button>
-          <div style="font-size:11px;color:var(--text-tertiary);margin:-4px 0 12px;padding-left:4px;">包含所有流水、账户、账本、分类、预算及设置</div>
-          <button class="btn btn-outline btn-block" id="importJson" style="padding:14px;font-size:15px;">📤 从备份恢复</button>
-          <div style="font-size:11px;color:var(--text-tertiary);margin:4px 0 0;padding-left:4px;">将覆盖当前所有数据，请谨慎操作</div>
+          <div class="dm-section-title">备份与恢复</div>
+          <button class="dm-btn dm-btn-primary" id="exportJson" style="margin-bottom:6px;">导出完整备份</button>
+          <div style="font-size:11px;color:var(--text-tertiary);margin:0 0 14px 4px;">包含所有流水、账户、账本、分类、预算及设置</div>
+          <button class="dm-btn dm-btn-outline" id="importJson">从备份恢复</button>
+          <div style="font-size:11px;color:var(--text-tertiary);margin:8px 0 0 4px;">将覆盖当前所有数据，请谨慎操作</div>
         </div>
 
         <!-- 跨环境同步 -->
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-title" style="margin-bottom:12px;">跨环境同步</div>
-          <button class="btn btn-outline btn-block" id="genSyncCode" style="margin-bottom:8px;">生成同步码（复制后粘贴到另一端）</button>
-          <div id="syncCodeOutput" style="display:none;margin-bottom:8px;">
-            <textarea id="syncCodeText" readonly style="width:100%;height:80px;font-size:10px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-page);word-break:break-all;"></textarea>
-            <button class="btn btn-primary btn-block" id="copySyncCode" style="margin-top:4px;">复制同步码</button>
+        <div class="card" style="margin-bottom:12px;padding:16px;">
+          <div class="dm-section-title">跨环境同步</div>
+          <button class="dm-btn dm-btn-outline" id="genSyncCode" style="margin-bottom:10px;">生成同步码</button>
+          <div id="syncCodeOutput" style="display:none;margin-bottom:10px;">
+            <textarea id="syncCodeText" readonly style="width:100%;height:80px;font-size:10px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-page);word-break:break-all;"></textarea>
+            <button class="dm-btn dm-btn-primary" id="copySyncCode" style="margin-top:6px;height:40px;font-size:13px;">复制同步码</button>
           </div>
-          <textarea id="syncCodeInput" placeholder="在此粘贴另一端生成的同步码…" style="width:100%;height:80px;font-size:11px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-page);margin-bottom:8px;word-break:break-all;"></textarea>
-          <button class="btn btn-primary btn-block" id="mergeSyncCode">合并同步（不覆盖现有数据）</button>
-          <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;line-height:1.5;">在任意环境点"生成同步码"→复制→在另一个环境粘贴→点"合并同步"。</div>
+          <textarea id="syncCodeInput" placeholder="粘贴另一端生成的同步码…" style="width:100%;height:80px;font-size:11px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-page);margin-bottom:10px;word-break:break-all;"></textarea>
+          <button class="dm-btn dm-btn-primary" id="mergeSyncCode">合并同步</button>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;line-height:1.5;">生成→复制→粘贴→合并，不覆盖现有数据</div>
         </div>
 
         <!-- 进阶CSV折叠区 -->
-        <div class="card" style="margin-bottom:12px;overflow:hidden;">
-          <div id="advancedDataPanel" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;">
-            <span style="font-size:14px;font-weight:600;">高级数据操作（CSV）</span>
-            <span id="advancedArrow" style="transition:transform 0.3s;color:var(--text-tertiary);">▾</span>
+        <div class="card" style="margin-bottom:12px;overflow:hidden;padding:16px;">
+          <div id="advancedDataPanel" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;margin-bottom:4px;">
+            <span style="font-size:16px;font-weight:700;">高级数据操作（CSV）</span>
+            <span id="advancedArrow" class="dm-collapse-label">展开</span>
           </div>
-          <div id="advancedDataBody" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease;padding:0 16px;">
+          <div id="advancedDataBody" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
             <div style="padding:4px 0 12px;">
-              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">导出</div>
-              <button class="btn btn-outline btn-block" id="exportCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬆ 导出流水 CSV</button>
-              <button class="btn btn-outline btn-block" id="exportAccountsCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬆ 导出资产账户表</button>
-              <button class="btn btn-outline btn-block" id="exportGoalsCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬆ 导出攒钱目标表</button>
-              <button class="btn btn-outline btn-block" id="exportCategoriesCsv" style="margin-bottom:12px;font-size:13px;padding:10px;">⬆ 导出分类表</button>
-              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">导入</div>
-              <button class="btn btn-outline btn-block" id="importCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬇ 从 CSV 导入流水</button>
-              <button class="btn btn-outline btn-block" id="importAccountsCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬇ 从 CSV 导入资产账户</button>
-              <button class="btn btn-outline btn-block" id="importGoalsCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬇ 从 CSV 导入攒钱目标</button>
-              <button class="btn btn-outline btn-block" id="importCategoriesCsv" style="font-size:13px;padding:10px;">⬇ 从 CSV 导入分类</button>
-              <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;">导入将追加数据，不会覆盖现有数据；CSV格式需与导出格式一致</div>
+              <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);margin:8px 0 0 4px;">导出</div>
+              <div id="exportCsv" class="data-action-item"><span>导出流水</span><span class="dm-row-arrow">›</span></div>
+              <div id="exportAccountsCsv" class="data-action-item"><span>导出资产账户</span><span class="dm-row-arrow">›</span></div>
+              <div id="exportGoalsCsv" class="data-action-item"><span>导出攒钱目标</span><span class="dm-row-arrow">›</span></div>
+              <div id="exportCategoriesCsv" class="data-action-item"><span>导出分类表</span><span class="dm-row-arrow">›</span></div>
+              <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);margin:12px 0 0 4px;">导入</div>
+              <div id="importCsv" class="data-action-item"><span>导入流水</span><span class="dm-row-arrow">›</span></div>
+              <div id="importAccountsCsv" class="data-action-item"><span>导入资产账户</span><span class="dm-row-arrow">›</span></div>
+              <div id="importGoalsCsv" class="data-action-item"><span>导入攒钱目标</span><span class="dm-row-arrow">›</span></div>
+              <div id="importCategoriesCsv" class="data-action-item"><span>导入分类</span><span class="dm-row-arrow">›</span></div>
+              <div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;line-height:1.5;">导入将追加数据，不覆盖现有数据</div>
             </div>
           </div>
         </div>
 
         <!-- 危险操作 -->
-        <div class="card">
-          <div class="card-title" style="margin-bottom:12px;color:var(--danger);">危险操作</div>
-          <button class="btn btn-danger btn-block" id="clearAllData">清空所有数据</button>
-          <div style="font-size:12px;color:var(--text-tertiary);margin-top:8px;">此操作不可恢复，请务必先导出备份</div>
+        <div class="card" style="border:1.5px solid var(--danger-light, #f5c6cb);padding:16px;">
+          <div style="font-size:16px;font-weight:700;color:var(--danger);margin-bottom:14px;">危险操作</div>
+          <button class="dm-btn" id="clearAllData" style="background:var(--danger);color:#fff;box-shadow:0 3px 0 rgba(220,53,69,0.4);">清空所有数据</button>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;">此操作不可恢复，请务必先导出备份</div>
         </div>
       </div>
       <input type="file" id="importFile" accept=".json" style="display:none;">
@@ -5595,7 +5662,7 @@ const UI = {
       panel.onclick = () => {
         expanded = !expanded;
         body.style.maxHeight = expanded ? body.scrollHeight + 'px' : '0';
-        arrow.style.transform = expanded ? 'rotate(180deg)' : '';
+        arrow.textContent = expanded ? '收起' : '展开';
       };
       document.getElementById('exportCsv').onclick = () => this.exportCsv();
       document.getElementById('exportAccountsCsv').onclick = () => this.exportAccountsCsv();
@@ -5787,7 +5854,7 @@ const UI = {
 
   // 生成紧凑同步码（base64 JSON）
   generateSyncCode() {
-    const data = {
+    const raw = {
       t: Store.state.transactions,
       a: Store.state.accounts,
       c: Store.state.categories,
@@ -5803,6 +5870,11 @@ const UI = {
       tp: Store.state.templates,
       sr: (Store.state.settings && Store.state.settings.recurringRules) || []
     };
+    // 只保留有数据的表，缩短同步码
+    const data = {};
+    for (const [k, v] of Object.entries(raw)) {
+      if (v && v.length > 0) data[k] = v;
+    }
     const json = JSON.stringify(data);
     let code;
     try { code = btoa(unescape(encodeURIComponent(json))); }
@@ -5815,14 +5887,15 @@ const UI = {
   // 合并同步码（LWW，不覆盖）
   async mergeSyncCode(code) {
     let data;
-    // 清理所有空白字符（换行、空格、tab），防止粘贴时混入
-    code = code.trim().replace(/\s+/g, '');
+    // 只保留合法 base64 字符，自动补 padding
+    code = code.replace(/[^A-Za-z0-9+/=]/g, '');
+    while (code.length % 4 !== 0) code += '=';
     try {
       const json = decodeURIComponent(escape(atob(code)));
       data = JSON.parse(json);
     } catch(e) {
       try { data = JSON.parse(code); }
-      catch(e2) { Util.toast('同步码无效，请确认已完整复制（不要遗漏末尾）'); return false; }
+      catch(e2) { Util.toast('同步码无效，请重新从另一端完整复制'); return false; }
     }
     const map = {
       transactions: 't', accounts: 'a', categories: 'c', ledgers: 'l',
