@@ -368,8 +368,8 @@ a { text-decoration: none; color: inherit; }
   background: var(--bg-card);
   font-size: 15px;
 }
-input[type="date"].form-input,
-input[type="date"] {
+.wheel-date-input.form-input,
+.wheel-date-input {
   width: 100%;
   min-width: 0;
   -webkit-appearance: none;
@@ -378,11 +378,50 @@ input[type="date"] {
 }
 .form-input:focus { border-color: var(--primary); }
 select.form-input:active { transform: scale(0.98); }
-input[type="date"].form-input {
+.wheel-date-input.form-input {
   padding: 10px 12px;
   font-size: 15px;
   line-height: 1.4;
 }
+/* iOS滚轮日期选择器 */
+.wheel-picker-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9999;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.wheel-picker-panel {
+  width: 100%; max-width: 500px; background: #fff; border-radius: 16px 16px 0 0;
+  padding: 12px 0 20px;
+}
+.wheel-picker-title {
+  text-align: center; font-size: 16px; font-weight: 600; padding: 8px 0 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+.wheel-picker-cols {
+  display: flex; height: 200px; overflow: hidden; position: relative;
+}
+.wheel-picker-cols::before, .wheel-picker-cols::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 66px; z-index: 1; pointer-events: none;
+}
+.wheel-picker-cols::before { top: 0; background: linear-gradient(to bottom, #fff, transparent); }
+.wheel-picker-cols::after { bottom: 0; background: linear-gradient(to top, #fff, transparent); }
+.wheel-picker-highlight {
+  position: absolute; left: 8%; right: 8%; top: 67px; height: 66px;
+  background: var(--bg-page); border-radius: 8px; z-index: 0;
+}
+.wheel-col {
+  flex: 1; height: 200px; overflow-y: scroll; scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; position: relative; z-index: 1;
+  padding: 66px 0;
+}
+.wheel-col::-webkit-scrollbar { display: none; }
+.wheel-item {
+  height: 66px; scroll-snap-align: center; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--text-tertiary);
+}
+.wheel-picker-actions {
+  display: flex; gap: 8px; padding: 12px 16px 0;
+}
+.wheel-picker-actions button { flex: 1; }
 /* Toggle Switch */
 .switch {
   position: relative;
@@ -1619,42 +1658,6 @@ body.dark[data-style="handdrawn"] .type-switch {
   border-radius: var(--radius-md);
 }
 
-/* ===== 双人同步文本框统一样式 ===== */
-.sync-textarea {
-  width: 100%;
-  height: 90px;
-  min-height: 90px;
-  padding: 10px 12px;
-  font-size: 12px;
-  font-family: monospace;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  resize: vertical;
-  box-sizing: border-box;
-}
-[data-style="handdrawn"] .sync-textarea {
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-/* ===== 双人同步建立连接按钮统一尺寸 ===== */
-.sync-connect-btn {
-  height: 48px;
-  min-height: 48px;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 20px !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  line-height: 1;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* ===== 管理类页面手绘风格 ===== */
 [data-style="handdrawn"] .subpage .btn-primary.btn-block {
   margin: 12px 14px;
@@ -1951,9 +1954,7 @@ body.dark[data-style="handdrawn"] .type-switch {
         <div class="list-item" id="menuRecurring"><div class="item-main"><div class="item-title">定期记账</div><div class="item-sub">房租/工资/订阅自动生成</div></div><div class="menu-arrow" style="color:var(--text-tertiary)">&#8250;</div></div>
       </div>
       <div class="card" style="padding:0;">
-        <div class="list-item" id="menuRenqing"><div class="item-main"><div class="item-title">人情往来</div><div class="item-sub">红包、人情礼金单独记账</div></div><div class="menu-arrow" style="color:var(--text-tertiary)">&#8250;</div></div>
-        <div class="list-item" id="menuSync"><div class="item-main"><div class="item-title">双人同步</div><div class="item-sub">同一WiFi下与家人共同记账</div></div><div class="menu-arrow" style="color:var(--text-tertiary)">&#8250;</div></div>
-        <div class="list-item" id="menuData"><div class="item-main"><div class="item-title">数据管理</div><div class="item-sub">导入导出、清空数据</div></div><div class="menu-arrow" style="color:var(--text-tertiary)">&#8250;</div></div>
+        <div class="list-item" id="menuData"><div class="item-main"><div class="item-title">数据管理</div><div class="item-sub">导入导出、跨环境同步</div></div><div class="menu-arrow" style="color:var(--text-tertiary)">&#8250;</div></div>
         <div class="list-item" id="menuAppearance"><div class="item-main"><div class="item-title">外观设置</div><div class="item-sub">隐私模式、深色模式</div></div><div class="menu-arrow" style="color:var(--text-tertiary)">&#8250;</div></div>
       </div>
       <div style="text-align:center;padding:20px;color:var(--text-tertiary);font-size:12px;">v1.0 · 数据纯本地存储</div>
@@ -2007,7 +2008,7 @@ body.dark[data-style="handdrawn"] .type-switch {
       <div class="form-group">
         <label class="form-label">日期</label>
         <div style="display:flex;gap:8px;">
-          <input class="form-input" id="txDate" type="date" style="flex:1;">
+          <input class="form-input wheel-date-input" id="txDate" type="text" readonly style="flex:1;background:var(--bg-card);">
           <button class="btn btn-outline" id="txDateToday" style="flex-shrink:0;padding:0 16px;font-size:13px;">今天</button>
         </div>
       </div>
@@ -2059,11 +2060,6 @@ body.dark[data-style="handdrawn"] .type-switch {
       <div class="form-group" id="partyGroup" style="display:none;">
         <label class="form-label" id="partyLabel">对方</label>
         <input class="form-input" id="txParty" placeholder="输入对方名称">
-      </div>
-      <div class="form-group" id="rqPersonGroup" style="display:none;">
-        <label class="form-label">人情联系人 <span style="color:var(--danger);">*</span></label>
-        <input class="form-input" id="txRenqingPerson" placeholder="给谁的/从谁收的（必填）" list="rqPersonList">
-        <datalist id="rqPersonList"></datalist>
       </div>
     </div>
     <div class="sheet-footer">
@@ -2331,7 +2327,6 @@ const DB = {
     { name: 'installments', keyPath: 'id' },
     { name: 'tags', keyPath: 'id' },
     { name: 'templates', keyPath: 'id' },
-    { name: 'renqing_persons', keyPath: 'id' },
     { name: 'settings', keyPath: 'key' }
   ],
 
@@ -2523,7 +2518,7 @@ const Store = {
   async loadAll() {
     // 单表独立容错：某张表读取失败不能拖垮整个应用(流水仍要显示)
     const all = async (store) => { try { return await DB.getAll(store); } catch (e) { console.warn('loadAll 读取失败:', store, e); return []; } };
-    const [accounts, categories, transactions, ledgers, budgets, goals, goalAllocations, receivables, payables, bills, installments, tags, templates, renqingPersons] = await Promise.all([
+    const [accounts, categories, transactions, ledgers, budgets, goals, goalAllocations, receivables, payables, bills, installments, tags, templates] = await Promise.all([
       all('accounts'),
       all('categories'),
       all('transactions'),
@@ -2536,8 +2531,7 @@ const Store = {
       all('bills'),
       all('installments'),
       all('tags'),
-      all('templates'),
-      all('renqing_persons')
+      all('templates')
     ]);
     this.state.accounts = accounts;
     this.state.categories = categories;
@@ -2551,22 +2545,7 @@ const Store = {
     this.state.bills = bills;
     this.state.installments = installments;
     this.state.tags = tags;
-    // 老库升级：确保"人情"标签存在
-    if (!this.state.tags.some(t => t.name === '人情')) {
-      const tg = { id: 't_renqing', name: '人情', color: '#ef4444' };
-      try { await DB.add('tags', tg); this.state.tags.push(tg); } catch (e) {}
-    }
-    // 老库升级：确保人情往来一级分类存在
-    if (!this.state.categories.some(c => c.isRenqing && c.type === 'expense')) {
-      const cat = { id: 'c_renqing_exp', name: '人情往来', type: 'expense', parentId: null, icon: '🧧', sort: 8, isRenqing: true };
-      try { await DB.add('categories', cat); this.state.categories.push(cat); } catch (e) {}
-    }
-    if (!this.state.categories.some(c => c.isRenqing && c.type === 'income')) {
-      const cat = { id: 'c_renqing_inc', name: '人情往来', type: 'income', parentId: null, icon: '🧧', sort: 4, isRenqing: true };
-      try { await DB.add('categories', cat); this.state.categories.push(cat); } catch (e) {}
-    }
     this.state.templates = templates;
-    this.state.renqingPersons = renqingPersons;
     // settings
     const privacy = await DB.getById('settings', 'privacyMode');
     const theme = await DB.getById('settings', 'theme');
@@ -2660,12 +2639,11 @@ const Store = {
       transactions: ['transactions'],
       categories: ['categories'],
       accounts: ['accounts'],
-      ledgers: ['ledgers'],
+      ledgers: null, // 特殊处理：不整表清空，保护总账本
       budgets: ['budgets'],
       goals: ['goals', 'goal_allocations'],
       tags: ['tags'],
       templates: ['templates'],
-      renqingPersons: ['renqing_persons'],
       receivables: ['receivables', 'payables', 'bills', 'installments']
     };
     const tablesToClear = [];
@@ -2673,12 +2651,24 @@ const Store = {
       if (tableMap[m]) tablesToClear.push(...tableMap[m]);
     }
     for (const t of tablesToClear) await DB.clear(t);
+    // 特殊处理：清空账本时只删用户自定义账本，保留总账本(id='all')
+    if (modules.includes('ledgers')) {
+      const allLedgers = await DB.getAll('ledgers');
+      for (const l of allLedgers) {
+        if (l.id !== 'all') await DB.remove('ledgers', l.id);
+      }
+      // 确保总账本存在
+      const general = await DB.getById('ledgers', 'all');
+      if (!general) {
+        await DB.put('ledgers', { id: 'all', name: '总账本', icon: '📊', rules: {}, createdAt: Util.nowTime() });
+      }
+    }
     // 重新加载内存状态
     await this.loadAll();
   },
 
   async clearAllData() {
-    await this.clearModules(['transactions','categories','accounts','ledgers','budgets','goals','tags','templates','renqingPersons','receivables']);
+    await this.clearModules(['transactions','categories','accounts','ledgers','budgets','goals','tags','templates','receivables']);
   },
 
   /* ---- 账户余额计算 ---- */
@@ -2961,9 +2951,7 @@ const Store = {
     return this.state.transactions.slice().sort((a, b) => b.date.localeCompare(a.date));
   },
 
-  /* ============ 双人同步（本地优先 / WebRTC P2P） ============ */
-  // state key -> IndexedDB 表名
-  SYNC_TYPES: ['accounts','categories','transactions','ledgers','budgets','goals','goalAllocations','receivables','payables','bills','installments','tags','templates'],
+  /* ============ 同步工具（LWW + 墓碑） ============ */
   _DB_TABLE: { accounts:'accounts', categories:'categories', transactions:'transactions', ledgers:'ledgers', budgets:'budgets', goals:'goals', goalAllocations:'goal_allocations', receivables:'receivables', payables:'payables', bills:'bills', installments:'installments', tags:'tags', templates:'templates' },
 
   getDeviceId() { return this.state.deviceId || null; },
@@ -2973,32 +2961,7 @@ const Store = {
       await this.saveSetting('deviceId', this.state.deviceId);
     }
     if (!this.state.tombstones) { this.state.tombstones = []; }
-    if (!this.state.syncLog) { this.state.syncLog = []; }
-    if (!this.state.members) {
-      this.state.members = [{ id: 'member_me', name: '我' }];
-      this.state.currentMemberId = 'member_me';
-    }
   },
-  getMembers() { return this.state.members || [{ id: 'member_me', name: '我' }]; },
-  async setCurrentMember(memberId) { this.state.currentMemberId = memberId; await this.saveSetting('currentMemberId', memberId); },
-  async addMember(name) {
-    const m = { id: 'member_' + Util.uid(), name };
-    this.state.members.push(m);
-    await this.saveSetting('members', this.state.members);
-    return m;
-  },
-  async deleteMember(memberId) {
-    if (memberId === 'member_me') { Util.toast('不能删除"我"'); return false; }
-    this.state.members = (this.state.members || []).filter(m => m.id !== memberId);
-    // 把该记录人关联的流水 memberId 置空
-    (this.state.transactions || []).forEach(t => { if (t.memberId === memberId) t.memberId = null; });
-    // 如果当前选中的是被删的记录人，切回"我"
-    if (this.state.currentMemberId === memberId) this.state.currentMemberId = 'member_me';
-    await this.saveSetting('members', this.state.members);
-    await this.saveSetting('currentMemberId', this.state.currentMemberId);
-    return true;
-  },
-
   // 补齐/返回实体同步元数据（作用于副本，不改原对象）
   _withMeta(e, deviceId) {
     const c = JSON.parse(JSON.stringify(e));
@@ -3016,21 +2979,6 @@ const Store = {
     if (ua !== ub) return ua > ub ? 1 : -1;
     return 0;
   },
-
-  buildSyncPayload(state) {
-    const entities = {};
-    this.SYNC_TYPES.forEach(t => {
-      const arr = state[t] || [];
-      entities[t] = arr.map(e => this._withMeta(e, state.deviceId));
-    });
-    return {
-      deviceId: state.deviceId,
-      exportedAt: Util.nowTime(),
-      entities,
-      tombstones: JSON.parse(JSON.stringify(state.tombstones || []))
-    };
-  },
-  getSyncPayload() { return this.buildSyncPayload(this.state); },
 
   _tombKey(t) { return t.type + '::' + t.id; },
 
@@ -3055,144 +3003,6 @@ const Store = {
   },
 
   // 合并远端 payload 到指定 state（纯内存，返回统计）
-  mergeInto(state, payload, options) {
-    const opts = options || {};
-    const r = { added: 0, updated: 0, removed: 0, conflicts: 0, skipped: 0 };
-    if (!state.tombstones) state.tombstones = [];
-    if (!state.syncLog) state.syncLog = [];
-    // 冲突时间阈值：两端 updatedAt 相差 < 60 秒视为同步噪声，不算冲突
-    const CONFLICT_THRESHOLD_MS = 60000;
-    const logConflict = (type, id, msg) => {
-      state.syncLog.push({ at: Util.nowTime(), type, id, msg });
-      if (state.syncLog.length > 200) state.syncLog = state.syncLog.slice(-200);
-    };
-    // 判断两个 updatedAt 字符串的时间差
-    const timeDiffMs = (a, b) => {
-      if (!a || !b) return Infinity;
-      const ta = new Date(String(a).replace(' ', 'T')).getTime();
-      const tb = new Date(String(b).replace(' ', 'T')).getTime();
-      if (isNaN(ta) || isNaN(tb)) return Infinity;
-      return Math.abs(ta - tb);
-    };
-
-    // 1) 合并墓碑集合（union，保留最新）
-    (payload.tombstones || []).forEach(rt => {
-      const idx = state.tombstones.findIndex(x => this._tombKey(x) === this._tombKey(rt));
-      if (idx === -1) state.tombstones.push(rt);
-      else if (Store._cmpVer(rt, state.tombstones[idx]) > 0) state.tombstones[idx] = rt;
-    });
-
-    // 2) 远端墓碑对本地实体的影响
-    state.tombstones.forEach(t => {
-      const arr = state[t.type];
-      if (!arr) return;
-      const li = arr.findIndex(x => x.id === t.id);
-      if (li !== -1) {
-        const le = this._withMeta(arr[li], state.deviceId);
-        const cmp = Store._cmpVer(t, le);
-        if (cmp >= 0) {
-          arr.splice(li, 1); r.removed++;
-        } else {
-          state.tombstones = state.tombstones.filter(x => this._tombKey(x) !== this._tombKey(t));
-          logConflict(t.type, t.id, '删除被后续修改覆盖，已恢复');
-          r.conflicts++;
-        }
-      }
-    });
-
-    // 3) 合并远端实体
-    const remoteEntities = payload.entities || {};
-    const skipIds = new Set(opts.skipDuplicates && opts.duplicates ? opts.duplicates.map(d => d.remote.id) : []);
-    this.SYNC_TYPES.forEach(typeName => {
-      const remote = remoteEntities[typeName] || [];
-      const local = state[typeName] || (state[typeName] = []);
-      remote.forEach(re => {
-        if (typeName === 'transactions' && skipIds.has(re.id)) { r.skipped++; return; }
-        const reM = this._withMeta(re, payload.deviceId);
-        const tomb = state.tombstones.find(x => x.type === typeName && x.id === reM.id);
-        if (tomb && Store._cmpVer(tomb, reM) >= 0) return;
-        if (tomb) state.tombstones = state.tombstones.filter(x => this._tombKey(x) !== this._tombKey(tomb));
-        const li = local.findIndex(x => x.id === reM.id);
-        if (li === -1) { local.push(reM); r.added++; return; }
-        const le = this._withMeta(local[li], state.deviceId);
-        const cmp = Store._cmpVer(reM, le);
-        if (cmp > 0) {
-          // 只有内容真正变化时才计数
-          if (JSON.stringify(reM) !== JSON.stringify(le)) {
-            local[li] = reM;
-            r.updated++;
-            // 只有两端时间差超过阈值才算真正的业务冲突
-            if (Number(reM.version) === Number(le.version) && timeDiffMs(reM.updatedAt, le.updatedAt) > CONFLICT_THRESHOLD_MS) {
-              logConflict(typeName, reM.id, '双方在不同时间修改，按更新时间保留');
-              r.conflicts++;
-            }
-          }
-        } else if (cmp === 0 && JSON.stringify(reM) !== JSON.stringify(le)) {
-          // 同版本同时间但内容不同，且时间差超阈值才记冲突
-          if (timeDiffMs(reM.updatedAt, le.updatedAt) > CONFLICT_THRESHOLD_MS) {
-            logConflict(typeName, reM.id, '版本与时间相同但内容不同，保留本机版本');
-            r.conflicts++;
-          }
-        }
-      });
-    });
-    return r;
-  },
-
-  // 合并并持久化（真实设备调用）
-  async mergeSyncPayload(payload, options) {
-    const r = this.mergeInto(this.state, payload, options);
-    // 全量持久化受影响类型
-    for (const t of this.SYNC_TYPES) {
-      const table = this._DB_TABLE[t];
-      for (const e of this.state[t]) {
-        const eM = this._withMeta(e, this.state.deviceId);
-        await DB.put(table, eM);
-      }
-    }
-    await this.saveSetting('tombstones', this.state.tombstones);
-    await this.saveSetting('syncLog', this.state.syncLog);
-    return r;
-  },
-
-  // 检测远端 payload 中的流水是否与本地疑似重复
-  detectPotentialDuplicates(remotePayload) {
-    const remoteTx = (remotePayload.entities && remotePayload.entities.transactions) || [];
-    const localTx = this.state.transactions || [];
-    const dups = [];
-    remoteTx.forEach(rt => {
-      if (!rt.date || !rt.amount) return;
-      const match = localTx.find(lt => {
-        if (!lt.date || !lt.amount) return false;
-        if (lt.id === rt.id) return false; // 同 ID 走 LWW，不算疑似重复
-        if (lt.type !== rt.type) return false;
-        if (Math.abs(Number(lt.amount) - Number(rt.amount)) > 0.01) return false;
-        if (lt.categoryId !== rt.categoryId) return false;
-        // 日期相同或相差 ≤ 1 天
-        const d1 = new Date(rt.date).getTime();
-        const d2 = new Date(lt.date).getTime();
-        if (Math.abs(d1 - d2) > 86400000) return false;
-        // createdAt/updatedAt 相差 ≤ 30 秒
-        const t1 = new Date((rt.createdAt || rt.updatedAt || '').replace(' ', 'T')).getTime();
-        const t2 = new Date((lt.createdAt || lt.updatedAt || '').replace(' ', 'T')).getTime();
-        if (isNaN(t1) || isNaN(t2)) return true; // 无时间戳则按日期+金额+类型+分类匹配
-        return Math.abs(t1 - t2) <= 30000;
-      });
-      if (match) {
-        dups.push({ remote: rt, local: match });
-      }
-    });
-    return dups;
-  },
-
-  getResolvedDuplicates() {
-    try { return JSON.parse(localStorage.getItem('resolvedDups') || '{}'); } catch (e) { return {}; }
-  },
-  recordDuplicateDecision(localId, remoteId, choice) {
-    const resolved = this.getResolvedDuplicates();
-    resolved[localId + '||' + remoteId] = choice;
-    localStorage.setItem('resolvedDups', JSON.stringify(resolved));
-  },
 
   async deleteTransaction(id) {
     const idx = this.state.transactions.findIndex(t => t.id === id);
@@ -3249,90 +3059,6 @@ const Store = {
     return pay;
   },
 
-  /* ============ 人情往来特殊账本 ============ */
-  getRenqingPersons() { return this.state.renqingPersons || []; },
-  // 分类是否为人情往来分类（靠标记，不靠名字）
-  isRenqingCategory(cat) { return !!(cat && cat.isRenqing); },
-  // 判断所选分类是否人情分类：兼容一级/二级
-  isRenqingCategoryId(categoryId) {
-    const cat = this.getCategory(categoryId);
-    if (this.isRenqingCategory(cat)) return true;
-    if (cat && cat.parentId) return this.isRenqingCategory(this.getCategory(cat.parentId));
-    return false;
-  },
-  // 人情分类要求联系人；普通分类不强制
-  validateRenqingContact({ categoryId, parentCategoryId }, personName) {
-    const isRq = this.isRenqingCategoryId(categoryId) ||
-      (parentCategoryId ? this.isRenqingCategory(this.getCategory(parentCategoryId)) : false);
-    if (!isRq) return { ok: true, required: false };
-    return (personName && String(personName).trim()) ? { ok: true, required: true } : { ok: false, required: true };
-  },
-  // 一条流水是否属于人情范畴：人情模块记的，或打了"人情"标签
-  isRenqingTx(tx) {
-    return tx.ledgerType === 'renqing' || (tx.tags || []).includes('人情');
-  },
-  // 人情方向：in=对方送我 / out=我送对方
-  renqingDir(tx) {
-    if (tx.ledgerType === 'renqing') return tx.direction === 'in' ? 'in' : 'out';
-    return tx.type === 'income' ? 'in' : 'out';
-  },
-  async addRenqingPerson(name) {
-    if (!this.state.renqingPersons) this.state.renqingPersons = [];
-    const p = { id: Util.uid(), name, createdAt: Util.nowTime() };
-    await DB.add('renqing_persons', p);
-    this.state.renqingPersons.push(p);
-    return p;
-  },
-  async deleteRenqingPerson(personId) {
-    const count = this.getRenqingRecords(personId).length;
-    if (count > 0) {
-      return { ok: false, error: `该联系人有 ${count} 笔往来流水，请先删除相关流水后再删除联系人` };
-    }
-    await DB.remove('renqing_persons', personId);
-    this.state.renqingPersons = (this.state.renqingPersons || []).filter(p => p.id !== personId);
-    return { ok: true };
-  },
-  getRenqingRecords(personId) {
-    return this.state.transactions
-      .filter(t => t.personId === personId)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  },
-  async addRenqingRecord({ personId, direction, amount, date, reason, note, accountId }) {
-    const tx = {
-      id: Util.uid(), type: 'renqing', ledgerType: 'renqing',
-      personId, direction, amount: Number(amount),
-      date: Util.normalizeDate(date || Util.today()),
-      accountId, toAccountId: null, fee: 0,
-      categoryId: null, parentCategoryId: null,
-      reason: reason || '', note: note || reason || '',
-      tags: ['人情'], ledgerIds: ['all'], reimburseStatus: 'none',
-      relatedTxId: null, party: null,
-      version: 1, updatedAt: Util.nowTime(), deviceId: this.getDeviceId() || 'unknown',
-      memberId: this.state.currentMemberId || null, createdAt: Util.nowTime()
-    };
-    // 乐观更新：先入内存保证流水页/人情页立即显示，再异步落库
-    this.state.transactions.push(tx);
-    try { await DB.add('transactions', tx); }
-    catch (e) { console.warn('人情流水落库失败，已在内存显示:', e); }
-    return tx;
-  },
-  // 单人净额：对方送我(in) - 我送对方(out)
-  getRenqingNet(personId) {
-    return this.getRenqingRecords(personId).reduce((sum, t) =>
-      sum + (this.renqingDir(t) === 'in' ? Number(t.amount) : -Number(t.amount)), 0);
-  },
-  // 所有人情总净额（含人情模块记的 + 打"人情"标签的普通流水）
-  getRenqingTotalNet() {
-    return this.state.transactions
-      .filter(t => this.isRenqingTx(t))
-      .reduce((sum, t) => sum + (this.renqingDir(t) === 'in' ? Number(t.amount) : -Number(t.amount)), 0);
-  },
-  // 未指定具体人物、但带"人情"标签的普通流水（双向归集）
-  listUnassignedRenqing() {
-    return this.state.transactions
-      .filter(t => this.isRenqingTx(t) && !t.personId)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  },
 
   /* ---- 筛选流水 ---- */
   filterTransactions({ ledgerId='all', type, categoryId, accountId, tag, keyword, minAmount, maxAmount, startDate, endDate } = {}) {
@@ -3481,7 +3207,6 @@ const DefaultData = {
       { id: 'c_entertain', name: '娱乐', type: 'expense', parentId: null, icon: '🎮', sort: 5 },
       { id: 'c_medical', name: '医疗', type: 'expense', parentId: null, icon: '💊', sort: 6 },
       { id: 'c_education', name: '教育', type: 'expense', parentId: null, icon: '📚', sort: 7 },
-      { id: 'c_renqing_exp', name: '人情往来', type: 'expense', parentId: null, icon: '🧧', sort: 8, isRenqing: true },
       { id: 'c_other_exp', name: '其他', type: 'expense', parentId: null, icon: '📦', sort: 99 },
       // 支出二级 - 餐饮
       { id: 'c_food_breakfast', name: '早餐', type: 'expense', parentId: 'c_food', icon: '🥐', sort: 1 },
@@ -3506,7 +3231,6 @@ const DefaultData = {
       { id: 'c_salary', name: '工资', type: 'income', parentId: null, icon: '💰', sort: 1 },
       { id: 'c_parttime', name: '兼职', type: 'income', parentId: null, icon: '💼', sort: 2 },
       { id: 'c_invest', name: '理财', type: 'income', parentId: null, icon: '📈', sort: 3 },
-      { id: 'c_renqing_inc', name: '人情往来', type: 'income', parentId: null, icon: '🧧', sort: 4, isRenqing: true },
       { id: 'c_other_inc', name: '其他收入', type: 'income', parentId: null, icon: '📦', sort: 99 },
       // 收入二级
       { id: 'c_salary_base', name: '基本工资', type: 'income', parentId: 'c_salary', icon: '💰', sort: 1 },
@@ -3526,7 +3250,7 @@ const DefaultData = {
 
     // 默认账本
     const ledgers = [
-      { id: 'all', name: '总账本', rules: {}, createdAt: Util.nowTime() },
+      { id: 'all', name: '总账本', icon: '📊', rules: {}, createdAt: Util.nowTime() },
       { id: 'l_daily', name: '日常开销', rules: { categoryIds: ['c_food','c_transport','c_shopping','c_home','c_entertain'] }, createdAt: Util.nowTime() }
     ];
     await DB.bulkPut('ledgers', ledgers);
@@ -3535,8 +3259,7 @@ const DefaultData = {
     const tags = [
       { id: 't_work', name: '工作', color: '#3b82f6' },
       { id: 't_friend', name: '朋友聚会', color: '#8b5cf6' },
-      { id: 't_travel', name: '出差旅行', color: '#f59e0b' },
-      { id: 't_renqing', name: '人情', color: '#ef4444' }
+      { id: 't_travel', name: '出差旅行', color: '#f59e0b' }
     ];
     await DB.bulkPut('tags', tags);
 
@@ -3612,7 +3335,6 @@ const Router = {
         else if (title === '周度复盘') UI.openWeekReview && UI.openWeekReview();
         else if (title === '月度复盘') UI.openMonthReview && UI.openMonthReview();
         else if (title === '年度复盘') UI.openYearReview && UI.openYearReview();
-        else if (title === '人情往来') UI.openRenqing && UI.openRenqing();
         else if (title === '资产') UI.renderAssets();
       }, 10);
       const _safeRender = (name) => { try { const r = UI[name] && UI[name](); if (r && r.catch) r.catch(() => {}); } catch (e) {} };
@@ -3731,7 +3453,8 @@ const UI = {
     document.getElementById('totalTxCount').textContent = Store.state.transactions.length;
     // 当前账本名
     const ledger = Store.state.ledgers.find(l => l.id === Store.state.currentLedgerId);
-    document.getElementById('currentLedgerName').textContent = ledger ? ledger.name : '总账本';
+    const _icon = ledger ? (ledger.id === 'all' ? '📊' : (ledger.icon || '📁')) : '📊';
+    document.getElementById('currentLedgerName').textContent = _icon + ' ' + (ledger ? ledger.name : '总账本');
     // 近12个月收支趋势
     const now = new Date();
     let maxTrend = 1;
@@ -3872,8 +3595,7 @@ const UI = {
           amountText = (isIn ? '+' : '-') + Util.fmtMoneyPlain(tx.amount);
           amountClass = isIn ? 'income' : 'expense';
           typeIcon = '🧧'; typeName = isIn ? '人情·对方送我' : '人情·我送对方';
-          const p = (Store.state.renqingPersons || []).find(rp => rp.id === tx.personId);
-          subInfo = '对象：' + (p ? p.name : (tx.reason || '人情'));
+          subInfo = '对象：' + (tx.personName || tx.reason || '人情');
         }
         // 报销标记
         let reimburseTag = '';
@@ -4372,9 +4094,9 @@ const UI = {
           <option value="installment" ${bill && bill.repaymentMethod === 'installment' ? 'selected' : ''}>分期还款</option>
         </select></div>
         <div class="form-group"><label class="form-label">起息日</label>
-        <input class="form-input" id="billStartDate" type="date" value="${bill ? (bill.startDate || '') : Util.today()}"></div>
+        <input class="form-input wheel-date-input" id="billStartDate" type="text" readonly value="${bill ? (bill.startDate || '') : Util.today()}"></div>
         <div class="form-group"><label class="form-label">到期日</label>
-        <input class="form-input" id="billEndDate" type="date" value="${bill ? (bill.endDate || '') : ''}"></div>
+        <input class="form-input wheel-date-input" id="billEndDate" type="text" readonly value="${bill ? (bill.endDate || '') : ''}"></div>
         <div class="form-group"><label class="form-label">已还金额</label>
         <input class="form-input" id="billPaid" type="number" step="0.01" value="${bill ? (bill.paidAmount || 0) : 0}"></div>
         <div id="billInterestInfo" style="padding:12px;background:var(--bg-page);border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--text-secondary);">
@@ -4463,9 +4185,9 @@ const UI = {
           <option value="no_interest" ${(!inst || inst.repaymentMethod === 'no_interest') ? 'selected' : ''}>免息分期</option>
         </select></div>
         <div class="form-group"><label class="form-label">起息日</label>
-        <input class="form-input" id="instStartDate" type="date" value="${inst ? (inst.startDate || '') : Util.today()}"></div>
+        <input class="form-input wheel-date-input" id="instStartDate" type="text" readonly value="${inst ? (inst.startDate || '') : Util.today()}"></div>
         <div class="form-group"><label class="form-label">到期日</label>
-        <input class="form-input" id="instEndDate" type="date" value="${inst ? (inst.endDate || '') : ''}"></div>
+        <input class="form-input wheel-date-input" id="instEndDate" type="text" readonly value="${inst ? (inst.endDate || '') : ''}"></div>
         <div class="form-group"><label class="form-label">已还期数</label>
         <input class="form-input" id="instPaid" type="number" min="0" value="${inst ? inst.paidPeriods : 0}"></div>
         <div id="instInterestInfo" style="padding:12px;background:var(--bg-page);border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--text-secondary);">
@@ -4547,7 +4269,7 @@ const UI = {
           const txCount = Store.state.transactions.filter(t => (t.ledgerIds || []).includes(l.id)).length;
           const budget = Store.getBudget(l.id, Util.monthKey(Util.today()));
           return `<div class="list-item" data-ledger-id="${l.id}">
-            <div class="icon-wrap" style="background:var(--primary-bg);">${l.id === 'all' ? '📊' : '📁'}</div>
+            <div class="icon-wrap" style="background:var(--primary-bg);">${l.id === 'all' ? '📊' : (l.icon || '📁')}</div>
             <div class="item-main"><div class="item-title">${l.name} ${l.id === 'all' ? '<span class="tag">默认</span>' : ''}</div>
             <div class="item-sub">${txCount} 笔流水 · 预算 ${budget ? Util.fmtMoney(budget.amount) : '未设置'}</div></div>
             <div class="item-value" style="color:var(--text-tertiary);font-size:13px;">${l.id === 'all' ? '' : '编辑'}</div>
@@ -4576,6 +4298,12 @@ const UI = {
     const tags = Store.state.tags;
     Router.openSubpage(isEdit ? '编辑账本' : '新增账本', `
       <div style="padding:16px;">
+        <div class="form-group"><label class="form-label">账本图标</label>
+        <input class="form-input" id="ledgerIcon" value="${ledger ? (ledger.icon || '📁') : '📁'}" placeholder="点这里输入任意emoji" style="text-align:center;font-size:24px;height:48px;" inputmode="text">
+        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px;">可直接用苹果 emoji 键盘输入任意表情，下方为常用快捷选择：</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+          ${['📊','📁','✈️','🏠','🍜','🛒','💼','🎓','💪','🎮','🎁','💰'].map(e => `<button type="button" class="ledger-emoji-pick" data-emoji="${e}" style="width:36px;height:36px;border:1px solid var(--border-light);border-radius:8px;background:var(--bg-card);font-size:18px;cursor:pointer;">${e}</button>`).join('')}
+        </div></div>
         <div class="form-group"><label class="form-label">账本名称</label>
         <input class="form-input" id="ledgerName" value="${ledger ? ledger.name : ''}" placeholder="如：旅行账本、减肥账本"></div>
         <div class="form-group"><label class="form-label">自动匹配规则（满足任一即归入此账本）</label>
@@ -4624,15 +4352,20 @@ const UI = {
       };
       document.querySelectorAll('.ledger-cat1').forEach(cb => cb.addEventListener('change', updateSubCats));
       updateSubCats();
+      // emoji快捷选择
+      document.querySelectorAll('.ledger-emoji-pick').forEach(btn => {
+        btn.onclick = () => { document.getElementById('ledgerIcon').value = btn.dataset.emoji; };
+      });
       document.getElementById('ledgerSave').onclick = async () => {
         const name = document.getElementById('ledgerName').value.trim();
         if (!name) { Util.toast('请输入账本名称'); return; }
+        const icon = document.getElementById('ledgerIcon').value.trim() || '📁';
         const keywords = document.getElementById('ledgerKeywords').value.split(',').map(s => s.trim()).filter(Boolean);
         const categoryIds = Array.from(document.querySelectorAll('.ledger-cat1:checked')).map(cb => cb.value);
         const subCategoryIds = Array.from(document.querySelectorAll('.ledger-cat2:checked')).map(cb => cb.value);
         const tagNames = Array.from(document.querySelectorAll('.ledger-tag:checked')).map(cb => cb.value);
         const budgetAmount = parseFloat(document.getElementById('ledgerBudget').value);
-        const data = { id: ledger ? ledger.id : Util.uid(), name, rules: { keywords, categoryIds, subCategoryIds, tagNames }, createdAt: ledger ? ledger.createdAt : Util.nowTime() };
+        const data = { id: ledger ? ledger.id : Util.uid(), name, icon, rules: { keywords, categoryIds, subCategoryIds, tagNames }, createdAt: ledger ? ledger.createdAt : Util.nowTime() };
         if (isEdit) { await DB.put('ledgers', data); const idx = Store.state.ledgers.findIndex(l => l.id === ledger.id); Store.state.ledgers[idx] = data; }
         else { await DB.add('ledgers', data); Store.state.ledgers.push(data); }
         if (budgetAmount > 0) {
@@ -4672,7 +4405,7 @@ const UI = {
         const txCount = Store.state.transactions.filter(t => (t.ledgerIds || []).includes(l.id)).length;
         const active = Store.state.currentLedgerId === l.id;
         return `<div class="list-item" data-ledger-id="${l.id}" style="${active ? 'background:var(--primary-bg);' : ''}">
-          <div class="icon-wrap" style="background:${active ? 'var(--primary)' : 'var(--bg-page)'};color:${active ? '#fff' : 'inherit'};">${l.id === 'all' ? '📊' : '📁'}</div>
+          <div class="icon-wrap" style="background:${active ? 'var(--primary)' : 'var(--bg-page)'};color:${active ? '#fff' : 'inherit'};">${l.id === 'all' ? '📊' : (l.icon || '📁')}</div>
           <div class="item-main"><div class="item-title">${l.name}</div>
           <div class="item-sub">${txCount} 笔流水</div></div>
           ${active ? '<div style="color:var(--primary);font-size:18px;">✓</div>' : ''}
@@ -4684,12 +4417,94 @@ const UI = {
         el.onclick = async () => {
           Store.state.currentLedgerId = el.dataset.ledgerId;
           await Store.saveSetting('currentLedgerId', el.dataset.ledgerId);
-          document.getElementById('currentLedgerName').textContent = Store.state.ledgers.find(l => l.id === el.dataset.ledgerId)?.name || '总账本';
+          const _cur = Store.state.ledgers.find(l => l.id === el.dataset.ledgerId);
+          const _ic = _cur ? (_cur.id === 'all' ? '📊' : (_cur.icon || '📁')) : '📊';
+          document.getElementById('currentLedgerName').textContent = _ic + ' ' + (_cur ? _cur.name : '总账本');
           Router.closeSubpage();
           this.renderHome(); this.renderTransactions(); this.renderAssets();
         };
       });
     }, 50);
+  },
+
+  openWheelDatePicker(currentVal, callback, opts) {
+    // opts: { mode: 'date'|'month'|'year' }
+    const mode = (opts && opts.mode) || 'date';
+    const now = new Date();
+    let curY, curM, curD;
+    if (currentVal && /^\d{4}-\d{1,2}/.test(currentVal)) {
+      const parts = currentVal.split('-');
+      curY = parseInt(parts[0]); curM = parseInt(parts[1]); curD = parts[2] ? parseInt(parts[2]) : 1;
+    } else {
+      curY = now.getFullYear(); curM = now.getMonth() + 1; curD = now.getDate();
+    }
+    const years = [];
+    for (let y = now.getFullYear() - 10; y <= now.getFullYear() + 10; y++) years.push(y);
+    const months = Array.from({length: 12}, (_, i) => i + 1);
+    const daysInMonth = new Date(curY, curM, 0).getDate();
+    const days = Array.from({length: daysInMonth}, (_, i) => i + 1);
+    const dayColHtml = (mode === 'month' || mode === 'year') ? '' :
+          `<div class="wheel-col" id="wpDay">${days.map(d => `<div class="wheel-item" data-val="${d}">${d}日</div>`).join('')}</div>`;
+    const monthColHtml = mode === 'year' ? '' :
+          `<div class="wheel-col" id="wpMonth">${months.map(m => `<div class="wheel-item" data-val="${m}">${m}月</div>`).join('')}</div>`;
+    const mask = document.createElement('div');
+    mask.className = 'wheel-picker-mask';
+    mask.innerHTML = `
+      <div class="wheel-picker-panel">
+        <div class="wheel-picker-title">${mode === 'month' ? '选择月份' : mode === 'year' ? '选择年份' : '选择日期'}</div>
+        <div class="wheel-picker-cols">
+          <div class="wheel-picker-highlight"></div>
+          <div class="wheel-col" id="wpYear">${years.map(y => `<div class="wheel-item" data-val="${y}">${y}年</div>`).join('')}</div>
+          ${monthColHtml}
+          ${dayColHtml}
+        </div>
+        <div class="wheel-picker-actions">
+          <button class="btn btn-outline" id="wpCancel">取消</button>
+          <button class="btn btn-primary" id="wpOk">确定</button>
+        </div>
+      </div>`;
+    document.body.appendChild(mask);
+    const colY = mask.querySelector('#wpYear');
+    const colM = mask.querySelector('#wpMonth');
+    const colD = mask.querySelector('#wpDay');
+    const ITEM_H = 66;
+    function scrollToItem(col, val) {
+      if (!col) return;
+      const item = col.querySelector(`[data-val="${val}"]`);
+      if (item) col.scrollTop = item.offsetTop - col.offsetTop - ITEM_H;
+    }
+    function getSelectedVal(col) {
+      if (!col) return null;
+      const idx = Math.round((col.scrollTop + ITEM_H / 2) / ITEM_H);
+      const items = col.querySelectorAll('.wheel-item');
+      return items[idx] ? parseInt(items[idx].dataset.val) : null;
+    }
+    scrollToItem(colY, curY); if (colM) scrollToItem(colM, curM); if (colD) scrollToItem(colD, curD);
+    function updateDayCol() {
+      if (!colD) return;
+      const y = getSelectedVal(colY) || curY;
+      const m = getSelectedVal(colM) || curM;
+      const dim = new Date(y, m, 0).getDate();
+      const curD2 = getSelectedVal(colD) || curD;
+      const validD = Math.min(curD2, dim);
+      colD.innerHTML = Array.from({length: dim}, (_, i) => i + 1).map(d => `<div class="wheel-item" data-val="${d}">${d}日</div>`).join('');
+      scrollToItem(colD, validD);
+    }
+    if (colY) colY.onscroll = () => { clearTimeout(colY._t); colY._t = setTimeout(updateDayCol, 150); };
+    if (colM) colM.onscroll = () => { clearTimeout(colM._t); colM._t = setTimeout(updateDayCol, 150); };
+    mask.querySelector('#wpCancel').onclick = () => { document.body.removeChild(mask); };
+    mask.querySelector('#wpOk').onclick = () => {
+      const y = getSelectedVal(colY);
+      const m = colM ? getSelectedVal(colM) : null;
+      if (y) {
+        let result;
+        if (mode === 'year') result = String(y);
+        else if (mode === 'month') result = `${y}-${String(m).padStart(2, '0')}`;
+        else result = `${y}-${String(m).padStart(2, '0')}-${String(getSelectedVal(colD) || 1).padStart(2, '0')}`;
+        callback(result);
+      }
+      document.body.removeChild(mask);
+    };
   },
 
   openBudgetManage() {
@@ -4880,7 +4695,7 @@ const UI = {
         <div class="form-group"><label class="form-label">目标金额</label>
         <input class="form-input" id="goalTarget" type="number" step="0.01" value="${goal ? goal.targetAmount : ''}" placeholder="目标金额"></div>
         <div class="form-group"><label class="form-label">截止日期</label>
-        <input class="form-input" id="goalDeadline" type="date" value="${goal ? (goal.deadline || '') : ''}"></div>
+        <input class="form-input wheel-date-input" id="goalDeadline" type="text" readonly value="${goal ? (goal.deadline || '') : ''}"></div>
         <div class="form-group"><label class="form-label">每月计划存</label>
         <input class="form-input" id="goalMonthly" type="number" step="0.01" value="${goal ? (goal.monthlyAmount || 0) : ''}" placeholder="每月计划存多少"></div>
         <div class="form-group"><label class="form-label">存钱账户（可多选，不选则所有账户均可划拨）</label>
@@ -5174,13 +4989,13 @@ const UI = {
     });
     let html = `<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
       <button class="icon-btn" id="calPrev"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <span style="font-size:16px;font-weight:600;">${year}年${month}月</span>
+      <span class="clickable-month" data-current="${this.calendarMonth}" style="font-size:16px;font-weight:600;cursor:pointer;">${year}年${month}月</span>
       <button class="icon-btn" id="calNext"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 8px;text-align:center;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">
       ${['日','一','二','三','四','五','六'].map(d => `<div style="padding:4px;">${d}</div>`).join('')}
     </div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 8px;">`;
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 8px;text-align:center;">`;
     // 空白格
     for (let i = 0; i < firstDay; i++) html += '<div></div>';
     for (let d = 1; d <= daysInMonth; d++) {
@@ -5188,7 +5003,7 @@ const UI = {
       const stats = dayStats[dateStr];
       const isToday = dateStr === today;
       const hasData = stats && (stats.income > 0 || stats.expense > 0);
-      html += `<div class="cal-day" data-date="${dateStr}" style="padding:6px 2px;border-radius:8px;min-height:52px;cursor:pointer;background:${isToday ? 'var(--primary-bg)' : hasData ? 'var(--bg-card)' : 'transparent'};border:${isToday ? '1px solid var(--primary)' : '1px solid transparent'};">
+      html += `<div class="cal-day" data-date="${dateStr}" style="padding:6px 2px;border-radius:8px;min-height:52px;cursor:pointer;background:${isToday ? 'var(--primary-bg)' : hasData ? 'var(--bg-card)' : 'transparent'};border:${isToday ? '1px solid var(--primary)' : '1px solid transparent'};text-align:center;">
         <div style="font-size:13px;font-weight:${isToday ? '700' : '400'};color:${isToday ? 'var(--primary)' : 'var(--text-primary)'};">${d}</div>
         ${stats ? `<div style="font-size:10px;color:var(--success);margin-top:2px;" data-amount>+${Util.fmtMoneyPlain(stats.income)}</div>` : ''}
         ${stats ? `<div style="font-size:10px;color:var(--danger);" data-amount>-${Util.fmtMoneyPlain(stats.expense)}</div>` : ''}
@@ -5303,7 +5118,7 @@ const UI = {
     Router.openSubpage('资金流向', `
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
         <button class="review-nav-btn" id="flowPrevMonth"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>上月</button>
-        <span class="review-date-label">${monthLabel}</span>
+        <span class="review-date-label clickable-month" data-current="${month}" style="cursor:pointer;">${monthLabel}</span>
         <button class="review-nav-btn" id="flowNextMonth">下月<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
       <div class="card"><div style="display:flex;justify-content:space-around;text-align:center;">
@@ -5397,7 +5212,7 @@ const UI = {
     Router.openSubpage('周度复盘', `
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
         <button class="review-nav-btn" id="weekPrev"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>上周</button>
-        <span class="review-date-label">${weekStart} ~ ${weekEnd}</span>
+        <span class="review-date-label clickable-month" data-current="${weekStart}" data-mode="date" style="cursor:pointer;">${weekStart} ~ ${weekEnd}</span>
         <button class="review-nav-btn" id="weekNext">下周<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
       <div class="card"><div style="display:flex;justify-content:space-around;text-align:center;">
@@ -5501,7 +5316,7 @@ const UI = {
     Router.openSubpage('月度复盘', `
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
         <button class="review-nav-btn" id="reviewPrevMonth"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>上月</button>
-        <span class="review-date-label">${year}年${m}月</span>
+        <span class="review-date-label clickable-month" data-current="${month}" style="cursor:pointer;">${year}年${m}月</span>
         <button class="review-nav-btn" id="reviewNextMonth">下月<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
       <div class="card"><div style="display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px;">
@@ -5644,7 +5459,7 @@ const UI = {
     Router.openSubpage('年度复盘', `
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
         <button class="review-nav-btn" id="yearReviewPrev"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>上年</button>
-        <span class="review-date-label">${y}年</span>
+        <span class="review-date-label clickable-month" data-current="${y}" data-mode="year" style="cursor:pointer;">${y}年</span>
         <button class="review-nav-btn" id="yearReviewNext">下年<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
       <div class="card"><div style="display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px;">
@@ -5704,501 +5519,21 @@ const UI = {
     }, 50);
   },
 
-  /* ===== 人情往来特殊账本 ===== */
-  openRenqing() {
-    const persons = Store.getRenqingPersons();
-    const totalNet = Store.getRenqingTotalNet();
-    Router.openSubpage('人情往来', `
-      <div style="padding:16px;">
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-title">人情总净额</div>
-          <div style="font-size:24px;font-weight:700;text-align:center;color:${totalNet >= 0 ? 'var(--success)' : 'var(--danger)'};" data-amount>${Util.fmtMoney(totalNet)}</div>
-          <div style="font-size:11px;color:var(--text-tertiary);text-align:center;margin-top:6px;">= 对方送我总额 − 我送对方总额</div>
-        </div>
-        <div class="card" style="margin-bottom:12px;">
-          <div style="display:flex;gap:8px;">
-            <input class="form-input" id="rqPersonName" placeholder="添加联系人姓名" style="flex:1;">
-            <button class="btn btn-primary" id="rqAddPerson">添加</button>
-          </div>
-        </div>
-        <div class="card" style="padding:0;">
-          ${persons.length === 0 ? '<div class="empty-state">还没有联系人，先添加一位</div>'
-            : persons.map(p => {
-                const net = Store.getRenqingNet(p.id);
-                return `<div class="list-item" data-rq-person="${p.id}" style="cursor:pointer;">
-                  <div class="icon-wrap" style="background:var(--primary-bg);">🧧</div>
-                  <div class="item-main"><div class="item-title">${p.name}</div>
-                    <div class="item-sub">${Store.getRenqingRecords(p.id).length} 笔往来</div></div>
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <span data-amount style="font-size:14px;font-weight:600;color:${net >= 0 ? 'var(--success)' : 'var(--danger)'}">${net >= 0 ? '+' : ''}${Util.fmtMoneyPlain(net)}</span>
-                    <button class="rq-person-del" data-person-del="${p.id}" style="background:none;border:none;color:var(--text-tertiary);font-size:16px;cursor:pointer;padding:4px;">🗑</button>
-                    <span class="item-value">›</span>
-                  </div>
-                </div>`;
-              }).join('')}
-        </div>
-        ${(() => {
-          const un = Store.listUnassignedRenqing();
-          if (un.length === 0) return '';
-          return `<div class="card" style="padding:0;margin-top:12px;">
-            <div style="padding:10px 16px;font-size:13px;color:var(--text-secondary);font-weight:600;">标签归集（带"人情"标签的普通流水）</div>
-            ${un.map(t => {
-              const isIn = Store.renqingDir(t) === 'in';
-              return `<div class="list-item">
-                <div class="icon-wrap" style="background:var(--primary-bg);">🏷️</div>
-                <div class="item-main"><div class="item-title">${isIn ? '对方送我' : '我送对方'} · ${t.note || ''}</div>
-                  <div class="item-sub">${t.date}</div></div>
-                <div data-amount style="font-size:14px;font-weight:600;color:${isIn ? 'var(--success)' : 'var(--danger)'}">${isIn ? '+' : '-'}${Util.fmtMoneyPlain(t.amount)}</div>
-              </div>`;
-            }).join('')}
-          </div>`;
-        })()}
-      </div>
-    `);
-    setTimeout(() => {
-      document.getElementById('rqAddPerson').onclick = async () => {
-        const n = document.getElementById('rqPersonName').value.trim();
-        if (!n) { Util.toast('请输入姓名'); return; }
-        await Store.addRenqingPerson(n);
-        this.openRenqing();
-      };
-      document.querySelectorAll('[data-rq-person]').forEach(el =>
-        el.onclick = (e) => {
-          if (e.target.closest('[data-person-del]')) return;
-          this.openRenqingPerson(el.dataset.rqPerson);
-        });
-      document.querySelectorAll('[data-person-del]').forEach(btn =>
-        btn.onclick = async (e) => {
-          e.stopPropagation();
-          const pid = btn.dataset.personDel;
-          const person = Store.getRenqingPersons().find(p => p.id === pid);
-          if (!person) return;
-          const count = Store.getRenqingRecords(pid).length;
-          const msg = count > 0
-            ? `「${person.name}」有 ${count} 笔往来流水，无法删除。请先删除相关流水。`
-            : `确定删除联系人「${person.name}」吗？`;
-          if (!confirm(msg)) return;
-          const r = await Store.deleteRenqingPerson(pid);
-          if (!r.ok) { Util.toast(r.error); return; }
-          Util.toast('已删除');
-          this.openRenqing();
-        });
-    }, 50);
-  },
-
-  openRenqingPerson(personId) {
-    const person = Store.getRenqingPersons().find(p => p.id === personId);
-    if (!person) return;
-    const records = Store.getRenqingRecords(personId);
-    const net = Store.getRenqingNet(personId);
-    const accounts = Store.state.accounts;
-    Router.openSubpage(person.name, `
-      <div style="padding:16px;">
-        <div class="card" style="margin-bottom:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div class="card-title" style="margin:0;">往来净额</div>
-            <div data-amount style="font-size:18px;font-weight:700;color:${net >= 0 ? 'var(--success)' : 'var(--danger)'}">${net >= 0 ? '+' : ''}${Util.fmtMoneyPlain(net)}</div>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-title">记一笔人情</div>
-          <div style="display:flex;gap:8px;margin-bottom:10px;">
-            <button id="rqDirOut" style="flex:1;height:44px;padding:0 20px;font-size:15px;font-weight:600;border-radius:22px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-primary);transition:all 0.15s;">我送对方</button>
-            <button id="rqDirIn" style="flex:1;height:44px;padding:0 20px;font-size:15px;font-weight:600;border-radius:22px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-primary);transition:all 0.15s;">对方送我</button>
-          </div>
-          <input type="hidden" id="rqDirection" value="out">
-          <div class="form-group"><label class="form-label">金额</label>
-            <input class="form-input" id="rqAmount" type="number" step="0.01" placeholder="金额"></div>
-          <div class="form-group"><label class="form-label">日期</label>
-            <input class="form-input" id="rqDate" type="date" value="${Util.today()}"></div>
-          <div class="form-group"><label class="form-label">事由</label>
-            <input class="form-input" id="rqReason" placeholder="如：婚礼、生日、节日"></div>
-          <div class="form-group"><label class="form-label">账户</label>
-            <select class="form-input" id="rqAccount">${accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}</select></div>
-          <button class="btn btn-primary btn-block" id="rqSaveRecord">保存</button>
-        </div>
-        <div class="card" style="padding:0;">
-          ${records.length === 0 ? '<div class="empty-state">暂无往来记录</div>'
-            : records.map(r => `
-              <div class="list-item">
-                <div class="icon-wrap" style="background:${r.direction === 'in' ? 'var(--success-bg)' : 'var(--warning-bg)'};">${r.direction === 'in' ? '📥' : '📤'}</div>
-                <div class="item-main"><div class="item-title">${r.direction === 'in' ? '对方送我' : '我送对方'} · ${r.reason || ''}</div>
-                  <div class="item-sub">${r.date}</div></div>
-                <div data-amount style="font-size:14px;font-weight:600;color:${r.direction === 'in' ? 'var(--success)' : 'var(--danger)'}">${r.direction === 'in' ? '+' : '-'}${Util.fmtMoneyPlain(r.amount)}</div>
-              </div>`).join('')}
-        </div>
-      </div>
-    `);
-    setTimeout(() => {
-      const setDir = (d) => {
-        document.getElementById('rqDirection').value = d;
-        const out = document.getElementById('rqDirOut');
-        const inBtn = document.getElementById('rqDirIn');
-        // 只改背景和颜色，尺寸/border/padding完全不动，杜绝跳动
-        out.style.background = d === 'out' ? 'var(--primary)' : 'var(--bg-card)';
-        out.style.color = d === 'out' ? '#fff' : 'var(--text-primary)';
-        out.style.borderColor = d === 'out' ? 'transparent' : 'var(--border)';
-        inBtn.style.background = d === 'in' ? 'var(--primary)' : 'var(--bg-card)';
-        inBtn.style.color = d === 'in' ? '#fff' : 'var(--text-primary)';
-        inBtn.style.borderColor = d === 'in' ? 'transparent' : 'var(--border)';
-      };
-      document.getElementById('rqDirOut').onclick = () => setDir('out');
-      document.getElementById('rqDirIn').onclick = () => setDir('in');
-      setDir('out');
-      document.getElementById('rqSaveRecord').onclick = async () => {
-        const amount = parseFloat(document.getElementById('rqAmount').value);
-        if (!amount || amount <= 0) { Util.toast('请输入金额'); return; }
-        await Store.addRenqingRecord({
-          personId, direction: document.getElementById('rqDirection').value,
-          amount, date: document.getElementById('rqDate').value,
-          reason: document.getElementById('rqReason').value,
-          accountId: document.getElementById('rqAccount').value
-        });
-        Util.toast('已保存');
-        try { this.renderHome(); this.renderTransactions(); this.renderAssets(); } catch (e) {}
-        this.openRenqingPerson(personId);
-      };
-    }, 50);
-  },
-
-  /* ===== 双人同步（WebRTC P2P，手动配对码，同WiFi直连） ===== */
-  _encodeCode(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))); },
-  _decodeCode(s) {
-    // 去除所有空白字符（换行、空格、制表符），兼容 iOS 复制粘贴带入的格式
-    const clean = s.trim().replace(/\s+/g, '');
-    return JSON.parse(decodeURIComponent(escape(atob(clean))));
-  },
-
-  async openSync() {
-    await Store.ensureDevice();
-    const members = Store.getMembers();
-    const cur = Store.state.currentMemberId;
-    Router.openSubpage('双人同步', `
-      <div style="padding:16px;">
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-title">当前记录人</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-            ${members.map(m => `
-              <div style="position:relative;display:inline-flex;align-items:center;">
-                <button class="btn ${m.id === cur ? 'btn-primary' : 'btn-outline'}" data-member="${m.id}" style="padding:6px 12px;font-size:13px;">${m.name}</button>
-                ${m.id !== 'member_me' ? `<button data-del-member="${m.id}" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--danger,#e74c3c);color:#fff;border:none;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;">×</button>` : ''}
-              </div>
-            `).join('')}
-          </div>
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <input class="form-input" id="newMemberName" placeholder="添加记账人姓名" style="flex:1;">
-            <button class="btn btn-outline" id="addMemberBtn">添加</button>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-title">建立连接（需同一 WiFi）</div>
-          <button class="btn btn-primary btn-block sync-connect-btn" id="syncHost">我是发起方 · 生成邀请码</button>
-          <button class="btn btn-outline btn-block sync-connect-btn" id="syncGuest" style="margin-top:24px !important;">我是接收方 · 粘贴邀请码</button>
-          <div id="syncStepArea" style="margin-top:12px;"></div>
-        </div>
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-title">最近同步</div>
-          <div id="syncResult" style="font-size:13px;color:var(--text-secondary);">尚未同步</div>
-        </div>
-        <div class="card">
-          <div class="card-title">冲突日志</div>
-          <div style="font-size:12px;color:var(--text-secondary);max-height:160px;overflow:auto;">
-            ${(Store.state.syncLog || []).slice(-10).reverse().map(l => `<div style="padding:4px 0;border-bottom:1px solid var(--border);">${l.at} · ${l.msg}</div>`).join('') || '无冲突'}
-          </div>
-        </div>
-      </div>
-    `);
-    setTimeout(() => {
-      document.querySelectorAll('[data-member]').forEach(b => b.onclick = async () => { await Store.setCurrentMember(b.dataset.member); this.openSync(); });
-      document.querySelectorAll('[data-del-member]').forEach(b => b.onclick = async (e) => {
-        e.stopPropagation();
-        const mid = b.dataset.delMember;
-        const m = Store.getMembers().find(x => x.id === mid);
-        if (!m) return;
-        const ok = await Util.confirm('删除记录人', `确定删除"${m.name}"吗？该记录人关联的流水将保留但不再关联此记录人。`);
-        if (!ok) return;
-        await Store.deleteMember(mid);
-        Util.toast('已删除');
-        this.openSync();
-      });
-      document.getElementById('addMemberBtn').onclick = async () => { const n = document.getElementById('newMemberName').value.trim(); if (!n) { Util.toast('请输入姓名'); return; } await Store.addMember(n); Util.toast('已添加'); this.openSync(); };
-      document.getElementById('syncHost').onclick = () => this._syncHost();
-      document.getElementById('syncGuest').onclick = () => this._syncGuest();
-    }, 50);
-  },
-
-  _newPC() { return new RTCPeerConnection({ iceServers: [] }); },
-  _waitIce(pc) {
-    return new Promise(res => {
-      if (pc.iceGatheringState === 'complete') return res();
-      pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') res(); });
-      setTimeout(res, 3500);
-    });
-  },
-  _fmtResult(r) {
-    let s = `新增 ${r.added} 条 · 更新 ${r.updated} 条 · 删除 ${r.removed} 条`;
-    if (r.skipped) s += ` · 跳过重复 ${r.skipped} 条`;
-    if (r.conflicts) s += ` · 冲突 ${r.conflicts} 条（见日志）`;
-    return s;
-  },
-  _setSyncStatus(text, color) {
-    const el = document.getElementById('syncStatus') || document.getElementById('syncResult');
-    if (el) { el.textContent = text; if (color) el.style.color = color; }
-  },
-  _bindChannel(channel) {
-    // 心跳保活
-    if (this._heartbeatTimer) clearInterval(this._heartbeatTimer);
-    this._heartbeatTimer = setInterval(() => {
-      if (channel.readyState === 'open') {
-        try { channel.send(JSON.stringify({ kind: 'ping', fromDevice: Store.getDeviceId() })); } catch (e) {}
-      }
-    }, 30000);
-
-    // 消息队列：弹窗确认期间排队其他消息
-    this._syncQueue = this._syncQueue || [];
-    this._syncBusy = false;
-
-    const processQueue = async () => {
-      if (this._syncBusy) return;
-      const next = this._syncQueue.shift();
-      if (!next) return;
-      this._syncBusy = true;
-      try { await this._handleSyncMessage(next, channel); } catch (e) { console.error('sync msg error', e); }
-      this._syncBusy = false;
-      processQueue();
-    };
-
-    channel.onopen = () => {
-      this._setSyncStatus('✓ 已连接，正在同步…', 'var(--success)');
-      try { channel.send(JSON.stringify({ kind: 'payload', data: Store.getSyncPayload(), fromDevice: Store.getDeviceId() })); } catch (e) {}
-    };
-    channel.onclose = () => {
-      this._setSyncStatus('连接已断开，可重新生成邀请码连接', 'var(--danger)');
-      if (this._heartbeatTimer) { clearInterval(this._heartbeatTimer); this._heartbeatTimer = null; }
-    };
-    channel.onmessage = (ev) => {
-      let msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
-      if (msg.fromDevice && msg.fromDevice === Store.getDeviceId()) return; // 回环防护
-      if (msg.kind === 'ping') return;
-      if (msg.kind === 'ack') {
-        const el = document.getElementById('syncResult');
-        if (el && msg.result) el.innerHTML = '✓ 对方已合并：' + this._fmtResult(msg.result);
-        this._setSyncStatus('✓ 同步完成，连接保持中', 'var(--success)');
-        return;
-      }
-      // payload 消息入队
-      this._syncQueue.push(msg);
-      processQueue();
-    };
-  },
-
-  async _handleSyncMessage(msg, channel) {
-    if (msg.kind !== 'payload') return;
-    const data = msg.data;
-    this._setSyncStatus('同步中…', 'var(--primary)');
-
-    // 检测疑似重复流水
-    const duplicates = Store.detectPotentialDuplicates(data);
-    let options = {};
-
-    if (duplicates.length > 0) {
-      // 过滤掉已经用户做过决策的重复对
-      const resolved = Store.getResolvedDuplicates();
-      const unresolved = duplicates.filter(d => {
-        const key = d.local.id + '||' + d.remote.id;
-        const key2 = d.remote.id + '||' + d.local.id;
-        return !resolved[key] && !resolved[key2];
-      });
-
-      if (unresolved.length > 0) {
-        const dupNames = unresolved.slice(0, 5).map(d => {
-          const cat = Store.getCategory(d.remote.categoryId);
-          return `${d.remote.date} ${d.remote.type==='expense'?'支出':'收入'} ¥${d.remote.amount} ${cat?cat.name:''}`;
-        }).join('\n');
-        const more = unresolved.length > 5 ? `\n...等 ${unresolved.length} 条` : '';
-
-        // 三选一弹窗
-        const choice = await new Promise(resolve => {
-          // 用自定义三按钮替代 confirm
-          const overlay = document.createElement('div');
-          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-          overlay.innerHTML = `
-            <div style="background:var(--card-bg,#fff);border-radius:16px;padding:20px;max-width:90%;width:340px;">
-              <div style="font-weight:600;margin-bottom:12px;">检测到 ${unresolved.length} 条疑似重复流水</div>
-              <div style="font-size:13px;color:var(--text-secondary,#666);white-space:pre-wrap;margin-bottom:16px;">${dupNames}${more}</div>
-              <div style="font-size:12px;color:var(--text-secondary,#999);margin-bottom:16px;">如何处理？</div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <button class="btn btn-primary" data-choice="keep_local">保留本地，跳过对端</button>
-                <button class="btn btn-outline" data-choice="keep_remote">保留对端，覆盖本地</button>
-                <button class="btn btn-outline" data-choice="keep_both">都保留（两条都要）</button>
-              </div>
-            </div>`;
-          document.body.appendChild(overlay);
-          overlay.querySelectorAll('[data-choice]').forEach(btn => {
-            btn.onclick = () => { document.body.removeChild(overlay); resolve(btn.dataset.choice); };
-          });
-        });
-
-        // 记录决策，避免下次再弹
-        unresolved.forEach(d => {
-          Store.recordDuplicateDecision(d.local.id, d.remote.id, choice);
-        });
-
-        if (choice === 'keep_local') {
-          options = { skipDuplicates: true, duplicates: unresolved };
-        } else if (choice === 'keep_remote') {
-          // 保留对端 = 删除本地重复的，让对端的插入
-          for (const d of unresolved) {
-            await Store.deleteTransaction(d.local.id);
-          }
-          options = { skipDuplicates: false, duplicates: [] };
-        }
-        // keep_both 不跳过任何
-      }
-    }
-
-    const r = await Store.mergeSyncPayload(data, options);
-    this._setSyncStatus('✓ 同步完成：' + this._fmtResult(r), 'var(--success)');
-    try { channel.send(JSON.stringify({ kind: 'ack', result: r, fromDevice: Store.getDeviceId() })); } catch (e) {}
-    this.renderHome(); this.renderTransactions(); this.renderAssets();
-    // 不自动回发全量数据（避免回环）；双向同步靠双方在 channel open 时各发一次
-  },
-
-  async _syncHost() {
-    if (typeof RTCPeerConnection === 'undefined') { Util.toast('当前浏览器不支持 WebRTC'); return; }
-    const area = document.getElementById('syncStepArea');
-    area.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);">正在生成邀请码…</div>';
-    const pc = this._newPC(); this.pc = pc;
-    pc.oniceconnectionstatechange = () => {
-      if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
-        this._setSyncStatus('⚠ 连接断开，请重新生成邀请码配对', 'var(--danger)');
-      } else if (pc.iceConnectionState === 'connected') {
-        this._setSyncStatus('✓ 已连接', 'var(--success)');
-      }
-    };
-    const channel = pc.createDataChannel('sync'); this.channel = channel; this._bindChannel(channel);
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await this._waitIce(pc);
-    const code = this._encodeCode({ sdp: pc.localDescription, deviceId: Store.getDeviceId() });
-    area.innerHTML = `
-      <div style="font-size:13px;margin-bottom:6px;">第 1 步：把下面邀请码发给对方</div>
-      <textarea readonly class="sync-textarea" id="hostInvite">${code}</textarea>
-      <button class="btn btn-outline btn-block" id="copyInvite" style="margin:8px 0;">复制邀请码</button>
-      <div style="font-size:13px;margin:8px 0 6px;">第 2 步：粘贴对方给你的应答码</div>
-      <textarea class="sync-textarea" id="hostAnswer" placeholder="粘贴应答码"></textarea>
-      <button class="btn btn-primary btn-block" id="hostFinish" style="margin-top:8px;">完成连接并同步</button>
-      <div id="syncStatus" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>`;
-    setTimeout(() => {
-      document.getElementById('copyInvite').onclick = () => { Util.copyText(code); Util.toast('已复制'); };
-      document.getElementById('hostFinish').onclick = async () => {
-        const ans = document.getElementById('hostAnswer').value.trim();
-        if (!ans) { Util.toast('请先粘贴应答码'); return; }
-        let obj;
-        try {
-          obj = this._decodeCode(ans);
-        } catch (e) {
-          Util.toast('应答码格式错误，请确认是否完整复制');
-          return;
-        }
-        try {
-          await pc.setRemoteDescription(obj.sdp);
-          document.getElementById('syncStatus').textContent = '连接中，连接建立后自动同步…';
-          // 连接成功后显示"再次同步"按钮
-          const resyncBtn = document.createElement('button');
-          resyncBtn.className = 'btn btn-outline btn-block';
-          resyncBtn.style.cssText = 'margin-top:8px;';
-          resyncBtn.textContent = '立即再次同步';
-          resyncBtn.onclick = () => {
-            if (this.channel && this.channel.readyState === 'open') {
-              try { this.channel.send(JSON.stringify({ kind: 'payload', data: Store.getSyncPayload(), fromDevice: Store.getDeviceId() })); Util.toast('已发送同步数据'); }
-              catch (e) { Util.toast('发送失败：' + e.message); }
-            } else { Util.toast('连接已断开，请重新配对'); }
-          };
-          document.getElementById('syncStatus').after(resyncBtn);
-        } catch (e) {
-          console.error('setRemoteDescription failed:', e);
-          Util.toast('应答码无效（SDP错误）：' + (e.message || e));
-        }
-      };
-    }, 50);
-  },
-
-  _syncGuest() {
-    if (typeof RTCPeerConnection === 'undefined') { Util.toast('当前浏览器不支持 WebRTC'); return; }
-    const area = document.getElementById('syncStepArea');
-    area.innerHTML = `
-      <div style="font-size:13px;margin-bottom:6px;">第 1 步：粘贴对方发来的邀请码</div>
-      <textarea class="sync-textarea" id="guestInvite" placeholder="粘贴邀请码"></textarea>
-      <button class="btn btn-primary btn-block" id="guestGenAnswer" style="margin:8px 0;">生成应答码</button>
-      <div id="guestAnswerArea"></div>`;
-    setTimeout(() => {
-      document.getElementById('guestGenAnswer').onclick = async () => {
-        const inv = document.getElementById('guestInvite').value.trim();
-        if (!inv) { Util.toast('请先粘贴邀请码'); return; }
-        let obj;
-        try {
-          obj = this._decodeCode(inv);
-        } catch (e) {
-          Util.toast('邀请码格式错误，请确认是否完整复制');
-          return;
-        }
-        try {
-          const pc = this._newPC(); this.pc = pc;
-          pc.oniceconnectionstatechange = () => {
-            if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
-              this._setSyncStatus('⚠ 连接断开，请重新配对', 'var(--danger)');
-            } else if (pc.iceConnectionState === 'connected') {
-              this._setSyncStatus('✓ 已连接', 'var(--success)');
-            }
-          };
-          pc.ondatachannel = (e) => { this.channel = e.channel; this._bindChannel(e.channel); };
-          await pc.setRemoteDescription(obj.sdp);
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          await this._waitIce(pc);
-          const code = this._encodeCode({ sdp: pc.localDescription, deviceId: Store.getDeviceId() });
-          document.getElementById('guestAnswerArea').innerHTML = `
-            <div style="font-size:13px;margin-bottom:6px;">第 2 步：把应答码发回对方</div>
-            <textarea readonly class="sync-textarea">${code}</textarea>
-            <button class="btn btn-outline btn-block" id="copyAnswer" style="margin:8px 0;">复制应答码</button>
-            <div style="font-size:12px;color:var(--text-secondary);">对方完成后将自动连接并同步，请勿关闭本页。</div>`;
-          document.getElementById('copyAnswer').onclick = () => { Util.copyText(code); Util.toast('已复制'); };
-        } catch (e) {
-          console.error('guest setRemoteDescription failed:', e);
-          Util.toast('邀请码无效（SDP错误）：' + (e.message || e));
-        }
-      };
-    }, 50);
-  },
-
   openDataManage() {
     Router.openSubpage('数据管理', `
       <div style="padding:16px;">
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-title" style="margin-bottom:12px;">数据导出</div>
-          <button class="btn btn-outline btn-block" id="exportCsv" style="margin-bottom:8px;">导出流水 CSV（含完整字段）</button>
-          <button class="btn btn-outline btn-block" id="exportAccountsCsv" style="margin-bottom:8px;">导出资产账户表</button>
-          <button class="btn btn-outline btn-block" id="exportGoalsCsv" style="margin-bottom:8px;">导出攒钱目标表</button>
-          <button class="btn btn-outline btn-block" id="exportCategoriesCsv" style="margin-bottom:8px;">导出分类表</button>
-          <button class="btn btn-outline btn-block" id="exportJson">导出完整备份 JSON</button>
+        <!-- 核心操作区 -->
+        <div class="card" style="margin-bottom:12px;padding:16px;">
+          <div style="font-size:15px;font-weight:700;margin-bottom:12px;">备份与恢复</div>
+          <button class="btn btn-primary btn-block" id="exportJson" style="margin-bottom:8px;padding:14px;font-size:15px;">📥 导出完整备份 JSON</button>
+          <div style="font-size:11px;color:var(--text-tertiary);margin:-4px 0 12px;padding-left:4px;">包含所有流水、账户、账本、分类、预算及设置</div>
+          <button class="btn btn-outline btn-block" id="importJson" style="padding:14px;font-size:15px;">📤 从备份恢复</button>
+          <div style="font-size:11px;color:var(--text-tertiary);margin:4px 0 0;padding-left:4px;">将覆盖当前所有数据，请谨慎操作</div>
         </div>
+
+        <!-- 跨环境同步 -->
         <div class="card" style="margin-bottom:12px;">
-          <div class="card-title" style="margin-bottom:12px;">数据导入</div>
-          <input type="file" id="importFile" accept=".json" style="display:none;">
-          <input type="file" id="importCsvFile" accept=".csv" style="display:none;">
-          <input type="file" id="importAccountsFile" accept=".csv" style="display:none;">
-          <input type="file" id="importGoalsFile" accept=".csv" style="display:none;">
-          <input type="file" id="importCategoriesFile" accept=".csv" style="display:none;">
-          <button class="btn btn-outline btn-block" id="importJson" style="margin-bottom:8px;">从 JSON 备份恢复</button>
-          <button class="btn btn-outline btn-block" id="importCsv" style="margin-bottom:8px;">从 CSV 导入流水</button>
-          <button class="btn btn-outline btn-block" id="importAccountsCsv" style="margin-bottom:8px;">从 CSV 导入资产账户</button>
-          <button class="btn btn-outline btn-block" id="importGoalsCsv" style="margin-bottom:8px;">从 CSV 导入攒钱目标</button>
-          <button class="btn btn-outline btn-block" id="importCategoriesCsv" style="margin-bottom:8px;">从 CSV 导入分类</button>
-          <div style="font-size:12px;color:var(--text-tertiary);margin-top:8px;">导入将追加数据，不会覆盖现有数据；CSV格式需与导出格式一致</div>
-        </div>
-        <div class="card" style="margin-bottom:12px;">
-          <div class="card-title" style="margin-bottom:12px;">跨环境同步（Safari ↔ 主屏幕书签）</div>
+          <div class="card-title" style="margin-bottom:12px;">跨环境同步</div>
           <button class="btn btn-outline btn-block" id="genSyncCode" style="margin-bottom:8px;">生成同步码（复制后粘贴到另一端）</button>
           <div id="syncCodeOutput" style="display:none;margin-bottom:8px;">
             <textarea id="syncCodeText" readonly style="width:100%;height:80px;font-size:10px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-page);word-break:break-all;"></textarea>
@@ -6206,16 +5541,56 @@ const UI = {
           </div>
           <textarea id="syncCodeInput" placeholder="在此粘贴另一端生成的同步码…" style="width:100%;height:80px;font-size:11px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-page);margin-bottom:8px;word-break:break-all;"></textarea>
           <button class="btn btn-primary btn-block" id="mergeSyncCode">合并同步（不覆盖现有数据）</button>
-          <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;line-height:1.5;">在 Safari 里点"生成同步码"→复制→切到主屏幕书签粘贴→点"合并同步"。数据按版本号自动去重。</div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;line-height:1.5;">在任意环境点"生成同步码"→复制→在另一个环境粘贴→点"合并同步"。</div>
         </div>
+
+        <!-- 进阶CSV折叠区 -->
+        <div class="card" style="margin-bottom:12px;overflow:hidden;">
+          <div id="advancedDataPanel" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;">
+            <span style="font-size:14px;font-weight:600;">高级数据操作（CSV）</span>
+            <span id="advancedArrow" style="transition:transform 0.3s;color:var(--text-tertiary);">▾</span>
+          </div>
+          <div id="advancedDataBody" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease;padding:0 16px;">
+            <div style="padding:4px 0 12px;">
+              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">导出</div>
+              <button class="btn btn-outline btn-block" id="exportCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬆ 导出流水 CSV</button>
+              <button class="btn btn-outline btn-block" id="exportAccountsCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬆ 导出资产账户表</button>
+              <button class="btn btn-outline btn-block" id="exportGoalsCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬆ 导出攒钱目标表</button>
+              <button class="btn btn-outline btn-block" id="exportCategoriesCsv" style="margin-bottom:12px;font-size:13px;padding:10px;">⬆ 导出分类表</button>
+              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">导入</div>
+              <button class="btn btn-outline btn-block" id="importCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬇ 从 CSV 导入流水</button>
+              <button class="btn btn-outline btn-block" id="importAccountsCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬇ 从 CSV 导入资产账户</button>
+              <button class="btn btn-outline btn-block" id="importGoalsCsv" style="margin-bottom:6px;font-size:13px;padding:10px;">⬇ 从 CSV 导入攒钱目标</button>
+              <button class="btn btn-outline btn-block" id="importCategoriesCsv" style="font-size:13px;padding:10px;">⬇ 从 CSV 导入分类</button>
+              <div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;">导入将追加数据，不会覆盖现有数据；CSV格式需与导出格式一致</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 危险操作 -->
         <div class="card">
           <div class="card-title" style="margin-bottom:12px;color:var(--danger);">危险操作</div>
           <button class="btn btn-danger btn-block" id="clearAllData">清空所有数据</button>
           <div style="font-size:12px;color:var(--text-tertiary);margin-top:8px;">此操作不可恢复，请务必先导出备份</div>
         </div>
       </div>
+      <input type="file" id="importFile" accept=".json" style="display:none;">
+      <input type="file" id="importCsvFile" accept=".csv" style="display:none;">
+      <input type="file" id="importAccountsFile" accept=".csv" style="display:none;">
+      <input type="file" id="importGoalsFile" accept=".csv" style="display:none;">
+      <input type="file" id="importCategoriesFile" accept=".csv" style="display:none;">
     `);
     setTimeout(() => {
+      // 折叠面板
+      const panel = document.getElementById('advancedDataPanel');
+      const body = document.getElementById('advancedDataBody');
+      const arrow = document.getElementById('advancedArrow');
+      let expanded = false;
+      panel.onclick = () => {
+        expanded = !expanded;
+        body.style.maxHeight = expanded ? body.scrollHeight + 'px' : '0';
+        arrow.style.transform = expanded ? 'rotate(180deg)' : '';
+      };
       document.getElementById('exportCsv').onclick = () => this.exportCsv();
       document.getElementById('exportAccountsCsv').onclick = () => this.exportAccountsCsv();
       document.getElementById('exportGoalsCsv').onclick = () => this.exportGoalsCsv();
@@ -6258,7 +5633,6 @@ const UI = {
           { key: 'goals', label: '攒钱目标' },
           { key: 'tags', label: '标签管理' },
           { key: 'templates', label: '常用模板' },
-          { key: 'renqingPersons', label: '人情联系人' },
           { key: 'receivables', label: '应收应付/分期/账单' }
         ];
         const checksHtml = modules.map(m => `
@@ -6393,7 +5767,6 @@ const UI = {
       installments: Store.state.installments,
       tags: Store.state.tags,
       templates: Store.state.templates,
-      renqingPersons: Store.state.renqingPersons || [],
       settings: Store.state.settings
     };
     this._showDownloadLink('记账备份_' + Util.today() + '.json', JSON.stringify(data, null, 2), 'application/json');
@@ -6416,7 +5789,7 @@ const UI = {
       i: Store.state.installments,
       tg: Store.state.tags,
       tp: Store.state.templates,
-      rp: Store.state.renqingPersons || []
+      sr: (Store.state.settings && Store.state.settings.recurringRules) || []
     };
     const json = JSON.stringify(data);
     let code;
@@ -6441,7 +5814,7 @@ const UI = {
       transactions: 't', accounts: 'a', categories: 'c', ledgers: 'l',
       budgets: 'b', goals: 'g', goalAllocations: 'ga', receivables: 'r',
       payables: 'p', bills: 'bi', installments: 'i', tags: 'tg',
-      templates: 'tp', renqingPersons: 'rp'
+      templates: 'tp'
     };
     let added = 0, updated = 0;
     for (const [table, key] of Object.entries(map)) {
@@ -6468,6 +5841,22 @@ const UI = {
           }
         }
       }
+    }
+    // 合并定期记账规则（无独立表，存在 settings 里）
+    const incomingRules = data.sr || [];
+    if (incomingRules.length) {
+      if (!Store.state.settings) Store.state.settings = {};
+      const localRules = Store.state.settings.recurringRules || [];
+      const ruleMap = {};
+      localRules.forEach(r => { ruleMap[r.id] = r; });
+      for (const rule of incomingRules) {
+        if (!ruleMap[rule.id]) {
+          localRules.push(rule);
+          added++;
+        }
+      }
+      Store.state.settings.recurringRules = localRules;
+      await Store.saveSetting('recurringRules', localRules);
     }
     try { this.renderHome(); this.renderTransactions(); this.renderAssets(); } catch(e) {}
     Util.toast(`同步完成：新增 ${added} 条，更新 ${updated} 条`);
@@ -6667,20 +6056,8 @@ const UI = {
               memberId = member.id;
             }
           }
-          // 处理联系人（人情往来）
+          // 处理联系人（仅存为文本，不建独立联系人）
           let personId = null;
-          if (personName) {
-            let person = (Store.state.renqingPersons || []).find(p => p.name === personName);
-            if (!person) {
-              personId = Util.uid();
-              person = { id: personId, name: personName, createdAt: Util.nowTime() };
-              await DB.add('renqingPersons', person);
-              if (!Store.state.renqingPersons) Store.state.renqingPersons = [];
-              Store.state.renqingPersons.push(person);
-            } else {
-              personId = person.id;
-            }
-          }
           // 人情方向映射
           let dir = null;
           if (direction === '对方送我') dir = 'in';
@@ -7095,7 +6472,7 @@ const UI = {
       ['ledgers', 'ledgers'], ['budgets', 'budgets'], ['goals', 'goals'],
       ['goal_allocations', 'goalAllocations'], ['receivables', 'receivables'],
       ['payables', 'payables'], ['bills', 'bills'], ['installments', 'installments'],
-      ['tags', 'tags'], ['templates', 'templates'], ['renqing_persons', 'renqingPersons']
+      ['tags', 'tags'], ['templates', 'templates']
     ];
     try {
       for (const [table] of TABLES) await DB.clear(table);
@@ -7121,7 +6498,6 @@ const UI = {
     Store.state.installments = input.installments || [];
     Store.state.tags = input.tags || [];
     Store.state.templates = input.templates || [];
-    Store.state.renqingPersons = input.renqingPersons || [];
     // settings 合并：保留本机同步/标识字段不被旧备份覆盖
     const keepKeys = ['deviceId', 'tombstones', 'syncLog', 'members', 'currentMemberId', 'processedRequests', 'quickAddToken'];
     const saved = {};
@@ -7354,7 +6730,7 @@ const UI = {
         const txCount = Store.state.transactions.filter(t => t.categoryId === cat.id || t.parentCategoryId === cat.id).length;
         return `<div class="list-item" data-cat-id="${cat.id}">
           <div class="icon-wrap" style="background:var(--primary-bg);">${cat.icon || '📦'}</div>
-          <div class="item-main"><div class="item-title">${cat.name} ${cat.isRenqing ? '<span style="color:var(--danger);font-size:11px;background:#fee2e2;padding:2px 6px;border-radius:4px;margin-left:4px;">人情专属</span>' : ''} ${txCount > 0 ? '<span class="tag">' + txCount + '笔</span>' : ''}</div>
+          <div class="item-main"><div class="item-title">${cat.name} ${txCount > 0 ? '<span class="tag">' + txCount + '笔</span>' : ''}</div>
           <div class="item-sub">${children.length} 个二级分类</div></div>
           <button class="icon-btn" data-edit-parent="${cat.id}" style="width:32px;height:32px;" onclick="event.stopPropagation();"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
           <div class="item-value" style="color:var(--text-tertiary);font-size:13px;">展开</div>
@@ -7478,13 +6854,6 @@ const UI = {
         </select></div>` : ''}
         <div class="form-group"><label class="form-label">图标</label>
         <input class="form-input" id="catIcon" value="${cat ? (cat.icon || '') : ''}" placeholder="输入emoji，如 🍚"></div>
-        ${!editingChild ? `<div class="form-group" style="display:flex;align-items:center;gap:8px;padding:10px 0;">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" id="catIsRenqing" ${cat && cat.isRenqing ? 'checked' : ''} style="width:20px;height:20px;">
-            <span>设为人情往来专属分类</span>
-          </label>
-        </div>
-        <div style="font-size:12px;color:var(--text-tertiary);margin:-4px 0 8px;">开启后，选择该分类记账时强制要求输入联系人，并自动同步至人情往来</div>` : ''}
         ${isEdit ? `<div style="margin-top:16px;"><button class="btn btn-danger btn-block" id="catDelete">删除分类</button></div>` : ''}
         <div style="display:flex;gap:8px;margin-top:20px;">
           ${isEdit ? '<button class="btn btn-outline" id="catCancel" style="flex:1;">取消</button>' : ''}
@@ -7499,8 +6868,7 @@ const UI = {
         const icon = document.getElementById('catIcon').value.trim() || '📦';
         const finalType = editingChild ? catType : document.getElementById('catType').value;
         const finalParentId = editingChild ? document.getElementById('catParent').value : null;
-        const isRenqing = !editingChild && document.getElementById('catIsRenqing')?.checked;
-        const data = { id: cat ? cat.id : Util.uid(), name, type: finalType, parentId: finalParentId, icon, sort: cat ? cat.sort : 0, isRenqing: !!isRenqing };
+        const data = { id: cat ? cat.id : Util.uid(), name, type: finalType, parentId: finalParentId, icon, sort: cat ? cat.sort : 0 };
         if (isEdit) { await DB.put('categories', data); const idx = Store.state.categories.findIndex(c => c.id === cat.id); Store.state.categories[idx] = data; }
         else { await DB.add('categories', data); Store.state.categories.push(data); }
         Util.toast(isEdit ? '已更新' : '已添加');
@@ -7792,8 +7160,8 @@ const UI = {
           <div style="flex:1;"><label class="form-label">最大金额</label><input class="form-input" id="fMax" type="number" value="${f.maxAmount}"></div>
         </div>
         <div class="form-group" style="display:flex;gap:8px;">
-          <div style="flex:1;"><label class="form-label">开始日期</label><input class="form-input filter-date-input" id="fStart" type="date" value="${f.startDate}"></div>
-          <div style="flex:1;"><label class="form-label">结束日期</label><input class="form-input filter-date-input" id="fEnd" type="date" value="${f.endDate}"></div>
+          <div style="flex:1;"><label class="form-label">开始日期</label><input class="form-input filter-date-input wheel-date-input" id="fStart" type="text" readonly value="${f.startDate}"></div>
+          <div style="flex:1;"><label class="form-label">结束日期</label><input class="form-input filter-date-input wheel-date-input" id="fEnd" type="text" readonly value="${f.endDate}"></div>
         </div>
         <div style="display:flex;gap:8px;margin-top:20px;">
           <button class="btn btn-outline btn-block" id="fReset">重置</button>
@@ -8061,16 +7429,7 @@ const AddSheet = {
     this.updateRenqingField();
   },
 
-  // 选了人情往来分类时显示必填联系人
-  updateRenqingField() {
-    const group = document.getElementById('rqPersonGroup');
-    if (!group) return;
-    const isRq = Store.isRenqingCategoryId(this.selectedCat2) ||
-      (this.selectedCat1 && Store.isRenqingCategory(Store.getCategory(this.selectedCat1)));
-    group.style.display = isRq ? 'block' : 'none';
-    const dl = document.getElementById('rqPersonList');
-    if (dl) dl.innerHTML = Store.getRenqingPersons().map(p => `<option value="${p.name}">`).join('');
-  },
+  updateRenqingField() { /* 人情往来已移除 */ },
 
   renderAccounts() {
     const accounts = Store.state.accounts;
@@ -8119,19 +7478,6 @@ const AddSheet = {
 
     // 人情往来分类：联系人必填，自动归集
     let personId = null, personName = null, rqLedgerType = null, rqDirection = null, rqTags = this.selectedTags.slice();
-    const rqContact = (document.getElementById('txRenqingPerson').value || '').trim();
-    const rqCheck = Store.validateRenqingContact({ categoryId: this.selectedCat2, parentCategoryId: this.selectedCat1 }, rqContact);
-    if (rqCheck.required && !rqCheck.ok) { Util.toast('人情往来分类请填写联系人'); return; }
-    if (rqCheck.required) {
-      personName = rqContact;
-      // 已有联系人则复用，否则自动新建
-      let person = Store.state.renqingPersons.find(p => p.name === personName);
-      if (!person) { person = { id: Util.uid(), name: personName, createdAt: Util.nowTime() }; Store.state.renqingPersons.push(person); }
-      personId = person.id;
-      rqLedgerType = 'renqing';
-      rqDirection = (this.currentType === 'income') ? 'in' : 'out';
-      if (!rqTags.includes('人情')) rqTags.push('人情');
-    }
 
     // 自动匹配账本（根据备注、分类、标签自动分配）
     const mockTx = { note, categoryId: this.selectedCat2, parentCategoryId: this.selectedCat1, tags: rqTags };
@@ -8274,7 +7620,6 @@ const AddSheet = {
     if (tx.fee) document.getElementById('txFee').value = tx.fee;
     if (tx.reimburseStatus) document.getElementById('txReimburse').value = tx.reimburseStatus;
     if (tx.party) document.getElementById('txParty').value = tx.party;
-    if (tx.personName) document.getElementById('txRenqingPerson').value = tx.personName;
     this.currentType = tx.type;
     this.selectedCat1 = tx.parentCategoryId;
     this.selectedCat2 = tx.categoryId;
@@ -8345,6 +7690,41 @@ async function initApp() {
 
     // 保存
     document.getElementById('txSaveBtn').onclick = () => AddSheet.save();
+    // 全局：滚轮日期选择器
+    document.addEventListener('click', (e) => {
+      const input = e.target.closest('.wheel-date-input');
+      if (input) {
+        e.preventDefault();
+        UI.openWheelDatePicker(input.value, (val) => { input.value = val; input.dispatchEvent(new Event('change')); });
+        return;
+      }
+      const monthLabel = e.target.closest('.clickable-month');
+      if (monthLabel) {
+        e.preventDefault();
+        const cur = monthLabel.dataset.current || Util.monthKey(Util.today());
+        const mode = monthLabel.dataset.mode || 'month';
+        UI.openWheelDatePicker(cur, (val) => {
+          const title = document.getElementById('subpageTitle')?.textContent || '';
+          if (title.includes('资金流向')) UI.openFlowAnalysis(val);
+          else if (title.includes('月度复盘')) UI.openMonthReview(val);
+          else if (title.includes('年度复盘')) UI.openYearReview(val);
+          else if (title.includes('周度复盘')) {
+            const sel = new Date(val);
+            const now = new Date();
+            const nowDow = now.getDay() || 7;
+            const nowMonday = new Date(now); nowMonday.setDate(now.getDate() - nowDow + 1);
+            const selDow = sel.getDay() || 7;
+            const selMonday = new Date(sel); selMonday.setDate(sel.getDate() - selDow + 1);
+            const offset = Math.round((selMonday - nowMonday) / (7 * 86400000));
+            UI.openWeekReview(offset);
+          } else {
+            // 日历视图
+            UI.calendarMonth = val;
+            UI.renderCalendar();
+          }
+        }, { mode });
+      }
+    });
     // 日期回到今天
     document.getElementById('txDateToday').onclick = () => {
       document.getElementById('txDate').value = Util.today();
@@ -8477,8 +7857,6 @@ async function initApp() {
     document.getElementById('menuRecurring').onclick = () => UI.openRecurringManage();
     document.getElementById('menuTag').onclick = () => UI.openTagManage();
     document.getElementById('menuTemplate').onclick = () => UI.openTemplateManage();
-    document.getElementById('menuRenqing').onclick = () => UI.openRenqing();
-    document.getElementById('menuSync').onclick = () => UI.openSync();
     document.getElementById('menuData').onclick = () => UI.openDataManage();
     document.getElementById('menuAppearance').onclick = () => UI.openAppearance();
 
