@@ -5831,30 +5831,31 @@ const UI = {
       templates: 'tp'
     };
     let added = 0, updated = 0;
+    const report = [];
     for (const [table, key] of Object.entries(map)) {
       const incoming = data[key] || [];
-      if (!incoming.length) continue;
+      if (!incoming.length) { report.push(`${table}:无数据`); continue; }
       const existing = Store.state[table] || [];
       const existingMap = {};
       existing.forEach(r => { existingMap[r.id] = r; });
+      let tAdded = 0, tUpdated = 0, tFailed = 0;
       for (const row of incoming) {
         const local = existingMap[row.id];
         if (!local) {
-          // 新记录，直接插入
           existing.push(row);
-          try { await DB.put(table, row); } catch(e) {}
-          added++;
+          try { await DB.put(table, row); tAdded++; added++; } catch(e) { tFailed++; }
         } else {
-          // 已有，按版本号 LWW
-          const lv = local.version || 0;
-          const rv = row.version || 0;
-          if (rv > lv) {
+          // 冲突解决：用时间戳比较，无时间戳时优先采用传入数据（覆盖种子数据）
+          const lv = local.updatedAt || local.createdAt || 0;
+          const rv = row.updatedAt || row.createdAt || 0;
+          const shouldUpdate = (!lv && rv) || String(rv) >= String(lv);
+          if (shouldUpdate) {
             Object.assign(local, row);
-            try { await DB.put(table, row); } catch(e) {}
-            updated++;
+            try { await DB.put(table, row); tUpdated++; updated++; } catch(e) { tFailed++; }
           }
         }
       }
+      report.push(`${table.split(/(?=[A-Z])/).join('')}:+${tAdded}/↑${tUpdated}${tFailed?'/✗'+tFailed:''}`);
     }
     // 合并定期记账规则（无独立表，存在 settings 里）
     const incomingRules = data.sr || [];
@@ -5873,7 +5874,11 @@ const UI = {
       await Store.saveSetting('recurringRules', localRules);
     }
     try { this.renderHome(); this.renderTransactions(); this.renderAssets(); } catch(e) {}
-    Util.toast(`同步完成：新增 ${added} 条，更新 ${updated} 条`);
+    console.log('同步报告:', report);
+    Util.toast(`同步完成：新增${added}条，更新${updated}条`);
+    if (added === 0 && updated === 0) {
+      Util.toast('未同步到新数据，可能两端分类ID重复或同步码不完整');
+    }
     return true;
   },
 
