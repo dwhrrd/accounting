@@ -5592,6 +5592,83 @@ const UI = {
     }, 50);
   },
 
+  // ===== 撤销快照 =====
+  captureSnapshot() {
+    try {
+      const snap = {
+        transactions: JSON.parse(JSON.stringify(Store.state.transactions || [])),
+        accounts: JSON.parse(JSON.stringify(Store.state.accounts || [])),
+        categories: JSON.parse(JSON.stringify(Store.state.categories || [])),
+        ledgers: JSON.parse(JSON.stringify(Store.state.ledgers || [])),
+        budgets: JSON.parse(JSON.stringify(Store.state.budgets || [])),
+        goals: JSON.parse(JSON.stringify(Store.state.goals || [])),
+        goalAllocations: JSON.parse(JSON.stringify(Store.state.goalAllocations || [])),
+        receivables: JSON.parse(JSON.stringify(Store.state.receivables || [])),
+        payables: JSON.parse(JSON.stringify(Store.state.payables || [])),
+        bills: JSON.parse(JSON.stringify(Store.state.bills || [])),
+        installments: JSON.parse(JSON.stringify(Store.state.installments || [])),
+        tags: JSON.parse(JSON.stringify(Store.state.tags || [])),
+        templates: JSON.parse(JSON.stringify(Store.state.templates || [])),
+        settings: JSON.parse(JSON.stringify(Store.state.settings || {}))
+      };
+      window.__undoSnapshot = snap;
+      try { sessionStorage.setItem('__undoSnapshot', JSON.stringify(snap)); } catch(e) {}
+    } catch(e) { console.warn('快照失败', e); window.__undoSnapshot = null; }
+  },
+
+  async restoreSnapshot() {
+    let snap = window.__undoSnapshot;
+    if (!snap) {
+      try {
+        const raw = sessionStorage.getItem('__undoSnapshot');
+        if (raw) snap = JSON.parse(raw);
+      } catch(e) {}
+    }
+    if (!snap) { alert('找不到备份快照，无法撤销'); return false; }
+    try {
+      const stores = ['transactions','accounts','categories','ledgers','budgets','goals','goal_allocations','receivables','payables','bills','installments','tags','templates'];
+      for (const s of stores) { try { await DB.clear(s); } catch(e) { console.error('clear失败', s, e); } }
+      const map = { transactions:'transactions', accounts:'accounts', categories:'categories', ledgers:'ledgers', budgets:'budgets', goals:'goals', goalAllocations:'goal_allocations', receivables:'receivables', payables:'payables', bills:'bills', installments:'installments', tags:'tags', templates:'templates' };
+      for (const [key, store] of Object.entries(map)) {
+        for (const row of (snap[key] || [])) { try { await DB.put(store, row); } catch(e) { console.error('put失败', store, row.id, e); } }
+      }
+      if (snap.settings) {
+        for (const [k, v] of Object.entries(snap.settings)) {
+          try { await DB.put('settings', { key: k, value: v }); } catch(e) { console.error('setting失败', k, e); }
+        }
+      }
+      window.__undoSnapshot = null;
+      try { sessionStorage.removeItem('__undoSnapshot'); } catch(e) {}
+      return true;
+    } catch(e) {
+      alert('撤销失败：' + e.message);
+      return false;
+    }
+  },
+
+  showUndoBar(msg) {
+    let bar = document.getElementById('undoBar');
+    if (bar) bar.remove();
+    bar = document.createElement('div');
+    bar.id = 'undoBar';
+    bar.style.cssText = 'position:fixed;bottom:90px;left:16px;right:16px;background:#333;color:#fff;padding:12px 16px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.2);font-size:14px;pointer-events:auto;';
+    const span = document.createElement('span');
+    span.textContent = msg;
+    const btn = document.createElement('button');
+    btn.textContent = '撤销';
+    btn.style.cssText = 'background:none;border:none;color:#ffb347;font-weight:700;font-size:15px;cursor:pointer;padding:8px 12px;';
+    btn.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const ok = await this.restoreSnapshot();
+      if (bar.parentNode) bar.parentNode.removeChild(bar);
+      if (ok) { alert('已成功撤销'); location.reload(); }
+    });
+    bar.appendChild(span);
+    bar.appendChild(btn);
+    document.body.appendChild(bar);
+  },
+
   openDataManage() {
     Router.openSubpage('数据管理', `
       <div style="padding:16px;">
@@ -5671,18 +5748,35 @@ const UI = {
       document.getElementById('exportJson').onclick = () => this.exportJson();
       document.getElementById('importJson').onclick = () => document.getElementById('importFile').click();
       document.getElementById('importFile').onchange = async (e) => {
+        this.captureSnapshot();
         const ok = await this.importJson(e.target.files[0]);
-        if (ok) { Util.toast('备份恢复成功'); Router.closeSubpage(); }
+        if (ok) { Util.toast('备份恢复成功'); Router.closeSubpage(); this.showUndoBar('已从备份恢复'); }
         e.target.value = '';
       };
       document.getElementById('importCsv').onclick = () => document.getElementById('importCsvFile').click();
-      document.getElementById('importCsvFile').onchange = (e) => this.importCsv(e.target.files[0]);
+      document.getElementById('importCsvFile').onchange = async (e) => {
+        this.captureSnapshot();
+        await this.importCsv(e.target.files[0]);
+        this.showUndoBar('已导入流水');
+      };
       document.getElementById('importAccountsCsv').onclick = () => document.getElementById('importAccountsFile').click();
-      document.getElementById('importAccountsFile').onchange = (e) => this.importAccountsCsv(e.target.files[0]);
+      document.getElementById('importAccountsFile').onchange = async (e) => {
+        this.captureSnapshot();
+        await this.importAccountsCsv(e.target.files[0]);
+        this.showUndoBar('已导入账户');
+      };
       document.getElementById('importGoalsCsv').onclick = () => document.getElementById('importGoalsFile').click();
-      document.getElementById('importGoalsFile').onchange = (e) => this.importGoalsCsv(e.target.files[0]);
+      document.getElementById('importGoalsFile').onchange = async (e) => {
+        this.captureSnapshot();
+        await this.importGoalsCsv(e.target.files[0]);
+        this.showUndoBar('已导入攒钱目标');
+      };
       document.getElementById('importCategoriesCsv').onclick = () => document.getElementById('importCategoriesFile').click();
-      document.getElementById('importCategoriesFile').onchange = (e) => this.importCategoriesCsv(e.target.files[0]);
+      document.getElementById('importCategoriesFile').onchange = async (e) => {
+        this.captureSnapshot();
+        await this.importCategoriesCsv(e.target.files[0]);
+        this.showUndoBar('已导入分类');
+      };
       // 跨环境同步码
       document.getElementById('genSyncCode').onclick = () => this.generateSyncCode();
       document.getElementById('copySyncCode').onclick = async () => {
@@ -5699,8 +5793,9 @@ const UI = {
       document.getElementById('mergeSyncCode').onclick = async () => {
         const code = document.getElementById('syncCodeInput').value.trim();
         if (!code) { Util.toast('请先粘贴同步码'); return; }
+        this.captureSnapshot();
         const ok = await this.mergeSyncCode(code);
-        if (ok) { Util.toast('同步完成'); document.getElementById('syncCodeInput').value = ''; }
+        if (ok) { Util.toast('同步完成'); document.getElementById('syncCodeInput').value = ''; this.showUndoBar('已合并同步数据'); }
       };
       document.getElementById('clearAllData').onclick = () => {
         const modules = [
@@ -5751,10 +5846,12 @@ const UI = {
             if (!ok) return;
           }
           mask.classList.remove('show');
+          this.captureSnapshot();
           await Store.clearModules(checked);
           Util.toast('已清空所选模块');
           Router.closeSubpage();
           this.renderHome(); this.renderTransactions(); this.renderAssets();
+          this.showUndoBar('已清空数据');
         };
         cancelBtn.onclick = () => { mask.classList.remove('show'); };
       };
