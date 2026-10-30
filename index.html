@@ -2536,6 +2536,12 @@ const Store = {
     this.state.accounts = accounts;
     this.state.categories = categories;
     this.state.transactions = transactions;
+    // 确保总账本永远存在（历史数据可能被误删）
+    if (!ledgers.find(l => l.id === 'all')) {
+      const general = { id: 'all', name: '总账本', icon: '📊', rules: {}, createdAt: Util.nowTime() };
+      await DB.put('ledgers', general);
+      ledgers.unshift(general);
+    }
     this.state.ledgers = ledgers;
     this.state.budgets = budgets;
     this.state.goals = goals;
