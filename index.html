@@ -2293,6 +2293,269 @@ const Util = {
       <div style="flex:1;min-width:0;">${legend}</div>
     </div>`;
   },
+
+  // ════ LieflatChart · 莫兰迪暖色系图表引擎 ════
+  LieflatChart: {
+    // 从 CSS 变量读取主题色，构建莫兰迪暖色系色板
+    getColors() {
+      const cs = getComputedStyle(document.documentElement);
+      const primary = cs.getPropertyValue('--primary').trim() || '#d4956b';
+      const success = cs.getPropertyValue('--success').trim() || '#7ba05b';
+      const danger = cs.getPropertyValue('--danger').trim() || '#c97b63';
+      const warning = cs.getPropertyValue('--warning').trim() || '#d4a056';
+      const accentBlue = cs.getPropertyValue('--accent-blue').trim() || '#7fb5b5';
+      const tertiary = cs.getPropertyValue('--text-tertiary').trim() || '#b0a394';
+      return [primary, success, accentBlue, danger, warning, tertiary];
+    },
+
+    // 环形图渲染：container 为 DOM 元素，data = [{name, value}]
+    donut(container, data, options = {}) {
+      if (!container || !data || data.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-tertiary);text-align:center;padding:16px;">暂无数据</div>';
+        return;
+      }
+      const total = data.reduce((s, d) => s + d.value, 0);
+      if (total <= 0) {
+        container.innerHTML = '<div style="color:var(--text-tertiary);text-align:center;padding:16px;">暂无数据</div>';
+        return;
+      }
+
+      const colors = this.getColors();
+      const size = options.size || 160;
+      const outerRadius = size / 2 - 8;
+      const innerRadius = options.innerRadius || outerRadius * 0.62;
+      const cx = size / 2, cy = size / 2;
+      const D2R = Math.PI / 180;
+
+      // 按值降序排列，最大扇区从顶部开始
+      const sorted = [...data].sort((a, b) => b.value - a.value);
+
+      // 生成 SVG 扇区路径
+      const GAP = 1; // 扇区间隙（度），防止边界像素重叠
+      let cumulative = 0;
+      const paths = sorted.map((d, i) => {
+        let startAngle = (cumulative / total) * 360 - 90;
+        cumulative += d.value;
+        let endAngle = (cumulative / total) * 360 - 90;
+        // 修复：当角度差接近 360°（整圆）时，SVG arc 会因起点终点重合而退化
+        const angleDiff = endAngle - startAngle;
+        if (angleDiff >= 359.99) {
+          endAngle -= 0.01;
+        }
+        // 扇区间留微小间隙，防止边界重叠导致命中错乱
+        if (sorted.length > 1 && angleDiff > GAP * 2) {
+          startAngle += GAP / 2;
+          endAngle -= GAP / 2;
+        }
+        const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+        const color = colors[i % colors.length];
+
+        const x1 = cx + outerRadius * Math.cos(startAngle * D2R);
+        const y1 = cy + outerRadius * Math.sin(startAngle * D2R);
+        const x2 = cx + outerRadius * Math.cos(endAngle * D2R);
+        const y2 = cy + outerRadius * Math.sin(endAngle * D2R);
+
+        const x1i = cx + innerRadius * Math.cos(startAngle * D2R);
+        const y1i = cy + innerRadius * Math.sin(startAngle * D2R);
+        const x2i = cx + innerRadius * Math.cos(endAngle * D2R);
+        const y2i = cy + innerRadius * Math.sin(endAngle * D2R);
+
+        const path = `M${x1},${y1} A${outerRadius},${outerRadius} 0 ${largeArc},1 ${x2},${y2} L${x2i},${y2i} A${innerRadius},${innerRadius} 0 ${largeArc},0 ${x1i},${y1i} Z`;
+
+        return { path, color, name: d.name, value: d.value, pct: (d.value / total * 100).toFixed(1), index: i };
+      });
+
+      // 构建 SVG
+      const svgContent = paths.map(p =>
+        `<path d="${p.path}" fill="${p.color}" class="lieflat-slice" data-index="${p.index}" data-name="${p.name}" data-value="${p.value}" data-pct="${p.pct}" style="cursor:pointer;transition:opacity 0.2s;"></path>`
+      ).join('');
+
+      // 中心文字：总额
+      const centerText = `
+        <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--text-primary)">${Util.fmtMoneyPlain(total)}</text>
+        <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="10" fill="var(--text-secondary)" letter-spacing="0.05em">总 ${options.centerLabel || '支出'}</text>
+      `;
+
+      container.innerHTML = `
+        <div class="lieflat-chart-wrap" data-lieflat="donut" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;padding:8px 4px;">
+          <div style="position:relative;flex-shrink:0;width:120px;">
+            <svg viewBox="0 0 ${size} ${size}" style="width:100%;height:auto;">
+              ${svgContent}
+              ${centerText}
+            </svg>
+          </div>
+          <div class="lieflat-legend" style="flex:1;min-width:140px;">
+            ${paths.map((p, i) => `
+              <div class="lieflat-legend-item" data-index="${p.index}" data-name="${p.name}" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer;">
+                <span style="width:10px;height:10px;border-radius:2px;background:${p.color};flex-shrink:0;"></span>
+                <span style="flex:1;color:var(--text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
+                <span style="color:var(--text-secondary);flex-shrink:0;">${Util.fmtMoneyPlain(p.value)} (${p.pct}%)</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      // 绑定 tooltip 事件（touch + mouse）
+      const slices = container.querySelectorAll('.lieflat-slice');
+      const legendItems = container.querySelectorAll('.lieflat-legend-item');
+
+      const showTip = (name, value, pct, x, y) => {
+        this._hideTip();
+        const tip = document.createElement('div');
+        tip.className = 'lieflat-tooltip';
+        tip.style.cssText = `
+          position:fixed;left:${x}px;top:${y - 10}px;transform:translate(-50%,-100%);
+          background:var(--bg-card);color:var(--text-primary);
+          padding:8px 12px;border-radius:var(--radius-sm);
+          border:1px solid var(--border);box-shadow:var(--shadow-md);
+          font-size:12px;z-index:9999;pointer-events:none;
+          white-space:nowrap;
+        `;
+        tip.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${name}</div>
+          <div style="color:var(--text-secondary);">${Util.fmtMoney(value)} · ${pct}%</div>`;
+        document.body.appendChild(tip);
+        this._tipEl = tip;
+      };
+
+      const handleEvent = (e, el) => {
+        const name = el.getAttribute('data-name');
+        const value = el.getAttribute('data-value');
+        const pct = el.getAttribute('data-pct');
+        const point = e.touches ? e.touches[0] : e;
+        // 高亮：点击的区域变低亮，其他保持正常
+        slices.forEach(s => s.style.opacity = s === el ? '0.4' : '1');
+        showTip(name, value, pct, point.clientX, point.clientY);
+      };
+
+      const handleLeave = () => {
+        slices.forEach(s => s.style.opacity = '1');
+        this._hideTip();
+      };
+
+      slices.forEach(slice => {
+        slice.addEventListener('touchstart', e => { e.preventDefault(); handleEvent(e, slice); }, { passive: false });
+        slice.addEventListener('touchend', handleLeave);
+        slice.addEventListener('mouseenter', e => handleEvent(e, slice));
+        slice.addEventListener('mouseleave', handleLeave);
+      });
+
+      legendItems.forEach(item => {
+        const idx = item.getAttribute('data-index');
+        const slice = container.querySelector(`.lieflat-slice[data-index="${idx}"]`);
+        if (!slice) return;
+        const name = slice.getAttribute('data-name');
+        const value = slice.getAttribute('data-value');
+        const pct = slice.getAttribute('data-pct');
+        item.addEventListener('mouseenter', () => {
+          slices.forEach(s => s.style.opacity = s === slice ? '0.4' : '1');
+        });
+        item.addEventListener('mouseleave', handleLeave);
+        item.addEventListener('touchstart', e => {
+          e.preventDefault();
+          const rect = item.getBoundingClientRect();
+          showTip(name, value, pct, rect.left + rect.width / 2, rect.top);
+          slices.forEach(s => s.style.opacity = s === slice ? '0.4' : '1');
+        }, { passive: false });
+        item.addEventListener('touchend', handleLeave);
+      });
+    },
+
+    _hideTip() {
+      if (this._tipEl && this._tipEl.parentNode) {
+        this._tipEl.parentNode.removeChild(this._tipEl);
+        this._tipEl = null;
+      }
+    },
+
+    // 柱状图渲染
+    bar(container, data, options = {}) {
+      // data 格式: [{ month: '1月', income: 1000, expense: 800 }, ...]
+      // options: { series: [{name: '收入', key: 'income'}, {name: '支出', key: 'expense'}] }
+      if (!container || !data || data.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-tertiary);text-align:center;padding:16px;">暂无数据</div>';
+        return;
+      }
+      const colors = this.getColors();
+      const series = options.series || [
+        { name: '收入', key: 'income' },
+        { name: '支出', key: 'expense' }
+      ];
+      // 找最大值
+      let maxVal = 1;
+      data.forEach(d => series.forEach(s => { maxVal = Math.max(maxVal, d[s.key] || 0); }));
+      const chartH = 140;
+      const barGap = 2;
+      const groupGap = 8;
+
+      // 生成柱子
+      const groupsHtml = data.map((d, i) => {
+        const barsHtml = series.map((s, si) => {
+          const val = d[s.key] || 0;
+          const h = val / maxVal * (chartH - 20);
+          const color = colors[si % colors.length];
+          return `<div class="lieflat-bar" data-index="${i}" data-series="${si}" data-value="${val}" data-name="${s.name}" style="flex:1;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;">
+            <div style="width:100%;max-width:14px;height:${h}px;min-height:${val > 0 ? '3px' : '0'};background:${color};border-radius:3px 3px 0 0;transition:opacity 0.2s;"></div>
+          </div>`;
+        }).join('');
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:20px;">
+          <div style="width:100%;display:flex;gap:${barGap}px;align-items:flex-end;height:${chartH}px;padding:0 2px;">${barsHtml}</div>
+          <span style="font-size:9px;color:var(--text-tertiary);">${d.month}</span>
+        </div>`;
+      }).join('');
+
+      // 图例
+      const legendHtml = series.map((s, si) => {
+        const color = colors[si % colors.length];
+        return `<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary);">
+          <span style="width:10px;height:3px;background:${color};border-radius:2px;display:inline-block;"></span>${s.name}
+        </span>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="lieflat-chart-wrap" data-lieflat="bar" style="padding:8px 4px;">
+          <div style="display:flex;align-items:flex-end;gap:${groupGap}px;overflow-x:auto;padding-bottom:4px;">${groupsHtml}</div>
+          <div style="display:flex;gap:16px;justify-content:center;margin-top:4px;">${legendHtml}</div>
+        </div>
+      `;
+
+      // 绑定 tooltip 事件
+      const bars = container.querySelectorAll('.lieflat-bar');
+      const showTip = (name, value, x, y) => {
+        this._hideTip();
+        const tip = document.createElement('div');
+        tip.className = 'lieflat-tooltip';
+        tip.style.cssText = `
+          position:fixed;left:${x}px;top:${y - 10}px;transform:translate(-50%,-100%);
+          background:var(--bg-card);color:var(--text-primary);
+          padding:6px 10px;border-radius:var(--radius-sm);
+          border:1px solid var(--border);box-shadow:var(--shadow-md);
+          font-size:11px;z-index:9999;pointer-events:none;white-space:nowrap;
+        `;
+        tip.innerHTML = `<div style="font-weight:600;">${name}</div><div style="color:var(--text-secondary);">${Util.fmtMoney(value)}</div>`;
+        document.body.appendChild(tip);
+        this._tipEl = tip;
+      };
+
+      bars.forEach(bar => {
+        const handleShow = (e) => {
+          const name = bar.getAttribute('data-name');
+          const value = bar.getAttribute('data-value');
+          const point = e.touches ? e.touches[0] : e;
+          bar.style.opacity = '0.6';
+          showTip(name, value, point.clientX, point.clientY);
+        };
+        const handleHide = () => {
+          bar.style.opacity = '1';
+          this._hideTip();
+        };
+        bar.addEventListener('touchstart', e => { e.preventDefault(); handleShow(e); }, { passive: false });
+        bar.addEventListener('touchend', handleHide);
+        bar.addEventListener('mouseenter', handleShow);
+        bar.addEventListener('mouseleave', handleHide);
+      });
+    }
+  },
   toast(msg, duration=2000) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -3531,44 +3794,17 @@ const UI = {
     document.getElementById('currentLedgerName').textContent = _icon + ' ' + (ledger ? ledger.name : '总账本');
     // 近12个月收支趋势
     const now = new Date();
-    let maxTrend = 1;
     const trendData = [];
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const mk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       const s = Store.getMonthStats(mk, Store.state.currentLedgerId);
-      trendData.push({ month: d.getMonth() + 1, income: s.income, expense: s.expense });
-      maxTrend = Math.max(maxTrend, s.income, s.expense);
+      trendData.push({ month: `${d.getMonth() + 1}月`, income: s.income, expense: s.expense });
     }
-    const chartW = 100, chartH = 100, pad = 5;
-    const incomePoints = trendData.map((d, i) => `${pad + (chartW - 2 * pad) * i / 11},${chartH - pad - (d.income / maxTrend) * (chartH - 2 * pad)}`).join(' ');
-    const expensePoints = trendData.map((d, i) => `${pad + (chartW - 2 * pad) * i / 11},${chartH - pad - (d.expense / maxTrend) * (chartH - 2 * pad)}`).join(' ');
-    const barsHtml = trendData.map(d => {
-      const incomeH = d.income / maxTrend * 100;
-      const expenseH = d.expense / maxTrend * 100;
-      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <div style="width:100%;display:flex;gap:1px;align-items:flex-end;height:120px;">
-          <div style="flex:1;background:var(--success);border-radius:2px 2px 0 0;height:${incomeH}%;min-height:${d.income > 0 ? '2px' : '0'};opacity:0.3;"></div>
-          <div style="flex:1;background:var(--danger);border-radius:2px 2px 0 0;height:${expenseH}%;min-height:${d.expense > 0 ? '2px' : '0'};opacity:0.3;"></div>
-        </div>
-        <span style="font-size:9px;color:var(--text-tertiary);">${d.month}月</span>
-      </div>`;
-    }).join('');
-    document.getElementById('homeTrendChart').innerHTML = `
-      <div style="position:relative;width:100%;animation:chartFadeIn 0.5s ease-out;">
-        <div style="display:flex;align-items:flex-end;gap:4px;padding:10px 0;">${barsHtml}</div>
-        <svg viewBox="0 0 ${chartW} ${chartH}" preserveAspectRatio="none" style="position:absolute;top:10px;left:0;width:100%;height:120px;pointer-events:none;">
-          <polyline points="${incomePoints}" fill="none" stroke="var(--success)" stroke-width="0.8" stroke-linejoin="round"/>
-          <polyline points="${expensePoints}" fill="none" stroke="var(--danger)" stroke-width="0.8" stroke-linejoin="round"/>
-          ${trendData.map((d, i) => `<circle cx="${pad + (chartW - 2 * pad) * i / 11}" cy="${chartH - pad - (d.income / maxTrend) * (chartH - 2 * pad)}" r="0.8" fill="var(--success)"/>`).join('')}
-          ${trendData.map((d, i) => `<circle cx="${pad + (chartW - 2 * pad) * i / 11}" cy="${chartH - pad - (d.expense / maxTrend) * (chartH - 2 * pad)}" r="0.8" fill="var(--danger)"/>`).join('')}
-        </svg>
-      </div>
-      <div style="display:flex;gap:12px;justify-content:center;font-size:11px;color:var(--text-secondary);padding-bottom:4px;">
-        <span><span style="display:inline-block;width:10px;height:2px;background:var(--success);vertical-align:middle;margin-right:4px;"></span>收入</span>
-        <span><span style="display:inline-block;width:10px;height:2px;background:var(--danger);vertical-align:middle;margin-right:4px;"></span>支出</span>
-      </div>
-    `;
+    document.getElementById('homeTrendChart').innerHTML = '';
+    Util.LieflatChart.bar(document.getElementById('homeTrendChart'), trendData, {
+      series: [{ name: '收入', key: 'income' }, { name: '支出', key: 'expense' }]
+    });
     // 预算健康度
     const budgetHealth = budgetAmount > 0
       ? (pct >= 100 ? '已超支' : pct >= 80 ? '接近上限' : pct >= 50 ? '正常' : '充裕')
@@ -3851,8 +4087,8 @@ const UI = {
     } else {
       // 账单分期
       let html = `<div style="padding:12px 16px;display:flex;gap:8px;">
-        <button class="btn btn-primary" id="addBill" style="flex:1;">+ 周期账单</button>
-        <button class="btn btn-outline" id="addInstallment" style="flex:1;">+ 分期计划</button>
+        <button class="btn btn-primary" id="addBill" style="flex:1;background:#d4956b;">+ 周期账单</button>
+        <button class="btn btn-primary" id="addInstallment" style="flex:1;background:#d4956b;">+ 分期计划</button>
       </div>`;
       // 还款日历(未来30天)
       const upcoming = Store.getUpcomingBills(Util.today(), 30);
@@ -5102,25 +5338,36 @@ const UI = {
     document.querySelectorAll('.cal-day').forEach(el => {
       el.onclick = () => {
         const date = el.dataset.date;
+        // 切换选中样式
+        document.querySelectorAll('.cal-day').forEach(d => {
+          d.style.background = d.dataset.date === date ? 'var(--primary-bg)' : (dayStats[d.dataset.date] ? 'var(--bg-card)' : 'transparent');
+          d.style.border = d.dataset.date === date ? '1px solid var(--primary)' : '1px solid transparent';
+        });
         const dayTxs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: date, endDate: date });
         let detailHtml = `<div style="padding:8px 16px;font-size:14px;font-weight:600;">${date} 流水（${dayTxs.length}笔）</div>`;
         if (dayTxs.length === 0) detailHtml += '<div style="padding:20px;text-align:center;color:var(--text-tertiary);">当天无流水</div>';
         else dayTxs.forEach(tx => {
-          const cat = Store.getCategory(tx.categoryId);
-          let amount = '', cls = '';
-          if (tx.type === 'renqing') {
-            const sign = Store.txSign(tx);
-            amount = sign + Util.fmtMoneyPlain(tx.amount); cls = sign === '+' ? 'income' : 'expense';
+          try {
+            const cat = Store.getCategory(tx.categoryId);
+            let amount = '', cls = '';
+            if (tx.type === 'renqing') {
+              const sign = tx.direction === 'in' ? '+' : '-';
+              amount = sign + Util.fmtMoneyPlain(tx.amount); cls = sign === '+' ? 'income' : 'expense';
+            }
+            else if (tx.type === 'income' || tx.type === 'reimburse_income') { amount = '+' + Util.fmtMoneyPlain(tx.amount); cls = 'income'; }
+            else if (tx.type === 'expense') { amount = '-' + Util.fmtMoneyPlain(tx.amount); cls = 'expense'; }
+            else if (tx.type === 'transfer') { amount = Util.fmtMoneyPlain(tx.amount); cls = ''; }
+            else { amount = Util.fmtMoneyPlain(tx.amount); }
+            let tlabel = cat ? cat.name : tx.type;
+            if (tx.type === 'renqing') tlabel = '人情往来';
+            detailHtml += `<div class="list-item" style="padding:10px 16px;">
+              <div class="icon-wrap" style="width:28px;height:28px;font-size:14px;background:var(--primary-bg);">${cat ? cat.icon : '📦'}</div>
+              <div class="item-main"><div class="item-title" style="font-size:14px;">${tlabel}</div></div>
+              <div class="item-value ${cls}" style="font-size:14px;" data-amount>${amount}</div>
+            </div>`;
+          } catch(e) {
+            console.error('渲染流水出错:', tx, e);
           }
-          else if (tx.type === 'income' || tx.type === 'reimburse_income') { amount = '+' + Util.fmtMoneyPlain(tx.amount); cls = 'income'; }
-          else if (tx.type === 'expense') { amount = '-' + Util.fmtMoneyPlain(tx.amount); cls = 'expense'; }
-          else { amount = Util.fmtMoneyPlain(tx.amount); }
-          const tlabel = tx.type === 'renqing' ? Store.txTypeLabel(tx) : (cat ? cat.name : (typeMap[tx.type] || tx.type));
-          detailHtml += `<div class="list-item" style="padding:10px 16px;">
-            <div class="icon-wrap" style="width:28px;height:28px;font-size:14px;background:var(--primary-bg);">${cat ? cat.icon : '📦'}</div>
-            <div class="item-main"><div class="item-title" style="font-size:14px;">${tlabel}</div></div>
-            <div class="item-value ${cls}" style="font-size:14px;" data-amount>${amount}</div>
-          </div>`;
         });
         document.getElementById('calDayDetail').innerHTML = detailHtml;
       };
@@ -5178,14 +5425,21 @@ const UI = {
         totalOut += Number(p.amount);
       }
     });
-    const renderBars = (data, total, color) => {
-      return Object.entries(data).sort((a, b) => b[1] - a[1]).map(([name, amount]) => {
+    const renderBars = (data, total) => {
+      const colors = Util.LieflatChart.getColors();
+      const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+      return sorted.map(([name, amount], i) => {
         const pct = total > 0 ? (amount / total * 100) : 0;
+        const barColor = colors[i % colors.length];
         return `<div style="margin-bottom:10px;">
           <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
-            <span>${name}</span><span style="color:var(--text-secondary);" data-amount>${Util.fmtMoney(amount)} (${pct.toFixed(0)}%)</span>
+            <span style="display:flex;align-items:center;gap:6px;">
+              <span style="width:8px;height:8px;border-radius:2px;background:${barColor};flex-shrink:0;"></span>
+              ${name}
+            </span>
+            <span style="color:var(--text-secondary);" data-amount>${Util.fmtMoney(amount)} (${pct.toFixed(0)}%)</span>
           </div>
-          <div class="progress-bar" style="height:8px;"><div class="fill" style="width:${pct}%;background:${color};"></div></div>
+          <div class="progress-bar" style="height:8px;"><div class="fill" style="width:${pct}%;background:${barColor};"></div></div>
         </div>`;
       }).join('');
     };
@@ -5200,12 +5454,25 @@ const UI = {
         <div><div style="font-size:12px;color:var(--text-secondary)">本月出账</div><div style="font-size:20px;font-weight:700;color:var(--danger);margin-top:4px;" data-amount>${Util.fmtMoney(totalOut)}</div></div>
       </div></div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">入账来源</div>
-      <div class="card">${totalIn > 0 ? Util.pieChart(Object.entries(incomeByCat).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value}))) : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无入账</div>'}</div>
-      <div class="card" style="margin-top:8px;">${totalIn > 0 ? renderBars(incomeByCat, totalIn, 'var(--success)') : ''}</div>
+      <div class="card" id="incomeDonutCard">${totalIn > 0 ? '<div id="incomeDonut"></div>' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无入账</div>'}</div>
+      <div class="card" style="margin-top:8px;">${totalIn > 0 ? renderBars(incomeByCat, totalIn) : ''}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">出账去向</div>
-      <div class="card">${totalOut > 0 ? Util.pieChart(Object.entries(expenseByCat).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value}))) : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无出账</div>'}</div>
-      <div class="card" style="margin-top:8px;">${totalOut > 0 ? renderBars(expenseByCat, totalOut, 'var(--danger)') : ''}</div>
+      <div class="card" id="expenseDonutCard">${totalOut > 0 ? '<div id="expenseDonut"></div>' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无出账</div>'}</div>
+      <div class="card" style="margin-top:8px;">${totalOut > 0 ? renderBars(expenseByCat, totalOut) : ''}</div>
     `);
+
+    // ════ LieflatChart 渲染：资金流向环形图 ════
+    if (totalIn > 0) {
+      const incomeData = Object.entries(incomeByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
+      const incomeEl = document.getElementById('incomeDonut');
+      if (incomeEl) Util.LieflatChart.donut(incomeEl, incomeData, { centerLabel: '入账' });
+    }
+    if (totalOut > 0) {
+      const expenseData = Object.entries(expenseByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
+      const expenseEl = document.getElementById('expenseDonut');
+      if (expenseEl) Util.LieflatChart.donut(expenseEl, expenseData, { centerLabel: '出账' });
+    }
+
     // 绑定月份切换
     const prevBtn = document.getElementById('flowPrevMonth');
     if (prevBtn) prevBtn.onclick = () => this.openFlowAnalysis(prevMonth);
@@ -5299,15 +5566,24 @@ const UI = {
         <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">支出：<span data-amount>${Util.fmtMoney(lastExpense)}</span> → <span data-amount>${Util.fmtMoney(expense)}</span> (${expense >= lastExpense ? '+' : ''}${((expense - lastExpense) / (lastExpense || 1) * 100).toFixed(0)}%)</div>
       </div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">收入分类占比</div>
-      <div class="card">${Util.pieChart(Object.entries(incomeByCat).sort((a,b)=>b[1]-a[1]).map(([name, value]) => ({ name, value })))}</div>
+      <div class="card" id="weekIncomeDonut">${income > 0 ? '' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无收入</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">支出分类占比</div>
-      <div class="card">${Util.pieChart(Object.entries(expenseByCat).map(([name, value]) => ({ name, value })))}</div>
+      <div class="card" id="weekExpenseDonut">${expense > 0 ? '' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无支出</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">二级分类明细（点击展开）</div>
       <div class="card">${subCatHtml || '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无支出</div>'}</div>
     `);
     setTimeout(() => {
       document.getElementById('weekPrev').onclick = () => this.openWeekReview(offsetWeeks - 1);
       document.getElementById('weekNext').onclick = () => this.openWeekReview(offsetWeeks + 1);
+      // 渲染周复盘饼图
+      if (income > 0) {
+        const incomeData = Object.entries(incomeByCat).sort((a,b)=>b[1]-a[1]).map(([name, value]) => ({ name, value }));
+        Util.LieflatChart.donut(document.getElementById('weekIncomeDonut'), incomeData, { centerLabel: '收入' });
+      }
+      if (expense > 0) {
+        const expenseData = Object.entries(expenseByCat).sort((a,b)=>b[1]-a[1]).map(([name, value]) => ({ name, value }));
+        Util.LieflatChart.donut(document.getElementById('weekExpenseDonut'), expenseData, { centerLabel: '支出' });
+      }
       document.querySelectorAll('.subcat-header').forEach(h => {
         h.onclick = () => {
           const body = h.nextElementSibling;
@@ -5406,9 +5682,9 @@ const UI = {
         </div>
       </div>` : ''}
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">收入分类占比</div>
-      <div class="card">${Util.pieChart(Object.entries(incomeByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value })))}</div>
+      <div class="card" id="monthIncomeDonut">${stats.income > 0 ? '' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无收入</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">支出分类占比</div>
-      <div class="card">${Util.pieChart(pieData)}</div>
+      <div class="card" id="monthExpenseDonut">${stats.expense > 0 ? '' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无支出</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">二级分类明细（点击展开）</div>
       <div class="card">${subCatHtml || '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无支出</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">支出方式排行</div>
@@ -5431,6 +5707,14 @@ const UI = {
         const d = new Date(year, m, 1);
         this.openMonthReview(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
       };
+      // 渲染月复盘饼图
+      if (stats.income > 0) {
+        const incomeData = Object.entries(incomeByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
+        Util.LieflatChart.donut(document.getElementById('monthIncomeDonut'), incomeData, { centerLabel: '收入' });
+      }
+      if (stats.expense > 0) {
+        Util.LieflatChart.donut(document.getElementById('monthExpenseDonut'), pieData, { centerLabel: '支出' });
+      }
       document.querySelectorAll('.subcat-header').forEach(h => {
         h.onclick = () => {
           const body = h.nextElementSibling;
@@ -5459,18 +5743,8 @@ const UI = {
     }
     const totalIncome = monthlyData.reduce((s, d) => s + d.income, 0);
     const totalExpense = monthlyData.reduce((s, d) => s + d.expense, 0);
-    const maxAmount = Math.max(...monthlyData.map(d => Math.max(d.income, d.expense)), 1);
-    const chartHtml = monthlyData.map(d => {
-      const incomeH = d.income / maxAmount * 100;
-      const expenseH = d.expense / maxAmount * 100;
-      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:22px;">
-        <div style="width:100%;display:flex;gap:1px;align-items:flex-end;height:80px;">
-          <div style="flex:1;background:var(--success);border-radius:2px 2px 0 0;height:${incomeH}%;min-height:${d.income > 0 ? '2px' : '0'};opacity:0.85;"></div>
-          <div style="flex:1;background:var(--danger);border-radius:2px 2px 0 0;height:${expenseH}%;min-height:${d.expense > 0 ? '2px' : '0'};opacity:0.85;"></div>
-        </div>
-        <span style="font-size:9px;color:var(--text-tertiary);">${d.month}月</span>
-      </div>`;
-    }).join('');
+    // 月度收支趋势数据
+    const yearTrendData = monthlyData.map(d => ({ month: `${d.month}月`, income: d.income, expense: d.expense }));
     // 年度分类聚合
     const yearTxs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: year + '-01-01', endDate: year + '-12-31' });
     const expenseByCat = {}, incomeByCat = {}, expenseBySubCat = {}, expenseByAccount = {};
@@ -5543,16 +5817,11 @@ const UI = {
       </div>
       <div style="margin-top:8px;font-size:13px;color:var(--text-secondary);text-align:center;">储蓄率：${totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome * 100).toFixed(0) : 0}%</div></div>
       <div class="card"><div class="card-title" style="margin-bottom:8px;">月度收支趋势</div>
-        <div style="display:flex;gap:2px;align-items:flex-end;overflow-x:auto;padding-bottom:4px;">${chartHtml}</div>
-        <div style="display:flex;gap:12px;justify-content:center;margin-top:4px;font-size:11px;color:var(--text-secondary);">
-          <span><span style="display:inline-block;width:10px;height:10px;background:var(--success);border-radius:2px;vertical-align:middle;margin-right:4px;"></span>收入</span>
-          <span><span style="display:inline-block;width:10px;height:10px;background:var(--danger);border-radius:2px;vertical-align:middle;margin-right:4px;"></span>支出</span>
-        </div>
-      </div>
+        <div id="yearTrendChart"></div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">收入分类占比</div>
-      <div class="card">${Util.pieChart(Object.entries(incomeByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value })))}</div>
+      <div class="card" id="yearIncomeDonut">${totalIncome > 0 ? '' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无收入</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">支出分类占比</div>
-      <div class="card">${Util.pieChart(Object.entries(expenseByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value })))}</div>
+      <div class="card" id="yearExpenseDonut">${totalExpense > 0 ? '' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无支出</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">二级分类明细（点击展开）</div>
       <div class="card">${subCatHtml || '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无支出</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">支出方式排行</div>
@@ -5582,6 +5851,19 @@ const UI = {
     setTimeout(() => {
       document.getElementById('yearReviewPrev').onclick = () => this.openYearReview(String(Number(year) - 1));
       document.getElementById('yearReviewNext').onclick = () => this.openYearReview(String(Number(year) + 1));
+      // 渲染年复盘饼图
+      if (totalIncome > 0) {
+        const incomeData = Object.entries(incomeByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
+        Util.LieflatChart.donut(document.getElementById('yearIncomeDonut'), incomeData, { centerLabel: '收入' });
+      }
+      if (totalExpense > 0) {
+        const expenseData = Object.entries(expenseByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
+        Util.LieflatChart.donut(document.getElementById('yearExpenseDonut'), expenseData, { centerLabel: '支出' });
+      }
+      // 渲染年复盘月度收支趋势柱状图
+      Util.LieflatChart.bar(document.getElementById('yearTrendChart'), yearTrendData, {
+        series: [{ name: '收入', key: 'income' }, { name: '支出', key: 'expense' }]
+      });
       document.querySelectorAll('.subcat-header').forEach(h => {
         h.onclick = () => {
           const body = h.nextElementSibling;
