@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="app-version" content="2026.11.02">
+<meta name="app-version" content="2026.10.30">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>账房管家</title>
 <style>
@@ -3232,13 +3232,6 @@ const Store = {
 
   /* ---- 快捷指令记账主入口 ---- */
   async quickAdd({ token, requestId, type, amount, cat, subcat, date, account, note } = {}) {
-    // requestId 幂等去重：同一个请求只处理一次
-    if (requestId) {
-      if (!this.state.processedRequests) this.state.processedRequests = [];
-      if (this.state.processedRequests.includes(requestId)) {
-        return { ok: true, txId: null, totalTx: this.state.transactions.length, duplicate: true };
-      }
-    }
     // token校验：本地应用，直接放行
     // 参数校验
     const amt = parseFloat(amount);
@@ -3287,45 +3280,13 @@ const Store = {
       reimburseStatus: 'none', relatedTxId: null, party: null,
       createdAt: Util.nowTime()
     };
-    // 写入重试：最多 3 次
-    let writeOk = false, lastErr = null;
-    for (let i = 0; i < 3; i++) {
-      try {
-        await DB.add('transactions', tx);
-        writeOk = true;
-        break;
-      } catch(e) {
-        lastErr = e;
-        console.warn(`[QuickAdd] 第 ${i+1} 次写入失败:`, e);
-        await new Promise(r => setTimeout(r, 200 * (i + 1))); // 递增等待
-      }
-    }
-    if (!writeOk) {
-      // 记录错误日志到 localStorage
-      try {
-        const log = JSON.parse(localStorage.getItem('quickadd_error_log') || '[]');
-        log.push({ time: new Date().toISOString(), error: lastErr.message, tx: tx });
-        localStorage.setItem('quickadd_error_log', JSON.stringify(log.slice(-20))); // 只保留最近20条
-      } catch(e) {}
-      return { ok: false, error: '写入数据库失败（已重试3次）: ' + lastErr.message };
-    }
+    await DB.add('transactions', tx);
     this.state.transactions.push(tx);
     // 回读验证：确认数据真的写进了IndexedDB
     const readback = await DB.getById('transactions', tx.id);
     if (!readback) {
       return { ok: false, error: 'DB写入后回读失败，数据未持久化' };
     }
-    // 记录已处理的 requestId，防止重复写入
-    if (requestId) {
-      if (!this.state.processedRequests) this.state.processedRequests = [];
-      this.state.processedRequests.push(requestId);
-      // 只保留最近 100 条，防止无限增长
-      if (this.state.processedRequests.length > 100) {
-        this.state.processedRequests = this.state.processedRequests.slice(-100);
-      }
-    }
-    // 广播数据更新信号，通知其他标签页自动刷新
-    try { if (window._syncChannel) window._syncChannel.postMessage('data_updated'); } catch(e) {}
     return { ok: true, txId: tx.id, totalTx: this.state.transactions.length };
   },
 
@@ -6886,12 +6847,6 @@ const UI = {
 
       const r = await Store.quickAdd(params);
       dbg('quickAdd 返回: ' + JSON.stringify(r));
-      // 记录成功/失败日志
-      try {
-        const log = JSON.parse(localStorage.getItem('quickadd_error_log') || '[]');
-        log.push({ time: new Date().toISOString(), ok: r.ok, error: r.error || '', amount: params.amount });
-        localStorage.setItem('quickadd_error_log', JSON.stringify(log.slice(-20)));
-      } catch(e) {}
 
       if (r.ok) {
         try { UI.renderHome(); } catch (e) { dbg('renderHome失败: ' + e.message); }
@@ -6899,12 +6854,6 @@ const UI = {
         try { UI.renderAssets(); } catch (e) { dbg('renderAssets失败: ' + e.message); }
         // 清理 URL 中的 quickadd hash，避免下次切回时重复处理
         try { history.replaceState(null, '', window.location.origin + window.location.pathname + window.location.search); } catch(e) {}
-        // 非调试模式下，写入成功后自动跳回主页，避免停留在新标签页
-        if (!isDebug) {
-          setTimeout(() => {
-            try { window.location.replace(window.location.origin + window.location.pathname + window.location.search); } catch(e) {}
-          }, 500);
-        }
       }
 
       // 始终显示完整诊断信息
@@ -7796,15 +7745,9 @@ const UI = {
       if (payBackup) { await DB.remove('payables', payBackup.id); Store.state.payables = Store.state.payables.filter(p => p.id !== payBackup.id); }
     });
     Util.toast('已删除');
-    // 优化：延迟到下一帧再渲染，避免和弹窗关闭的重排叠加导致闪烁
-    requestAnimationFrame(() => {
-      this.renderTransactions(); // 流水列表必须重绘
-      // 首页和资产页如果在后台，不需要立即重绘，切回去时再渲染
-      try {
-        if (document.getElementById('page-home').classList.contains('active')) this.renderHome();
-        if (document.getElementById('page-assets').classList.contains('active')) this.renderAssets();
-      } catch(e) {}
-    });
+    this.renderHome();
+    this.renderTransactions();
+    this.renderAssets();
   },
 };
 
@@ -8520,56 +8463,17 @@ if (typeof window !== 'undefined') {
     } catch (e) { console.warn('前台刷新数据失败:', e); }
   };
 
-  // 轮询检测：每 3 秒检查一次流水总数，发现变化自动刷新
-  let _lastTxCount = 0;
-  setInterval(async () => {
-    if (document.hidden) return; // 后台不检测，省电
-    try {
-      const txs = await DB.getAll('transactions');
-      const count = txs.length;
-      if (_lastTxCount === 0) { _lastTxCount = count; return; } // 首次初始化
-      if (count !== _lastTxCount) {
-        console.log('[Polling] 检测到流水数量变化:', _lastTxCount, '→', count);
-        _lastTxCount = count;
-        window.globalRefresh();
-      }
-    } catch(e) { /* 忽略错误 */ }
-  }, 3000);
-
-  // BroadcastChannel 跨标签页通信：一个标签页写入数据，其他标签页自动刷新
-  try {
-    const channel = new BroadcastChannel('account_book_sync');
-    window._syncChannel = channel;
-    channel.onmessage = (e) => {
-      if (e.data === 'data_updated') {
-        console.log('[Broadcast] 收到数据更新信号，自动刷新');
-        window.globalRefresh();
-      }
-    };
-  } catch(e) {
-    console.warn('BroadcastChannel 不支持，仅使用轮询');
-  }
-
   // 页面从后台切回前台时，重新加载数据并渲染（解决快捷指令在新标签页记账后原标签页看不到的问题）
   if (document.addEventListener) {
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState === 'visible') {
-        console.log('[Lifecycle] visibilitychange: 页面可见');
         window.globalRefresh();
       }
     });
   }
   // focus 事件兜底：切换标签页回来时触发
   window.addEventListener('focus', () => {
-    if (!document.hidden) {
-      console.log('[Lifecycle] focus: 窗口获得焦点');
-      window.globalRefresh();
-    }
-  });
-  // pageshow 事件兜底：bfcache 恢复时触发（iOS 常用）
-  window.addEventListener('pageshow', (e) => {
-    console.log('[Lifecycle] pageshow: 页面显示');
-    window.globalRefresh();
+    if (!document.hidden) window.globalRefresh();
   });
 }
 // 导出供测试
@@ -8577,32 +8481,15 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = { Util, DB, Store, DefaultData, Router, UI, AddSheet, History, Sound };
 }
 
-// 版本检测与缓存清理：强制加载最新版本
+// 版本检测：有新版本时自动刷新
 if (typeof window !== 'undefined' && window.localStorage && window.location) {
   try {
-    var _v = '2026.11.02'; // 每次发版更新这里
+    var _v = '2026.10.30';
     var _saved = window.localStorage.getItem('appVersion');
-
-    // 1. 注销所有 Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
-        regs.forEach(function(r) { r.unregister(); });
-      }).catch(function(){});
-    }
-
-    // 2. 清空所有 Cache Storage
-    if ('caches' in window) {
-      caches.keys().then(function(keys) {
-        keys.forEach(function(k) { caches.delete(k); });
-      }).catch(function(){});
-    }
-
-    // 3. 版本不一致时，强制带时间戳刷新
     if (_saved !== _v) {
       window.localStorage.setItem('appVersion', _v);
-      // 如果当前 URL 还没有时间戳参数，强制刷新一次
-      if (window.location.search.indexOf('v=') === -1) {
-        window.location.replace(window.location.pathname + '?v=' + Date.now() + window.location.hash);
+      if (window.location.search && window.location.search.indexOf('v=') === -1) {
+        window.location.replace(window.location.pathname + '?v=' + Date.now());
       }
     }
   } catch(e) {}
