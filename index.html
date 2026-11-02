@@ -1977,6 +1977,13 @@ body.dark[data-style="handdrawn"] .type-switch {
 
     <!-- 流水页 -->
     <section class="page" id="page-transactions">
+      <div id="txMonthSummary" style="margin:12px 16px 0;padding:10px 14px;background:var(--primary-bg);border-radius:var(--radius-sm);display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+        <span style="color:var(--text-secondary);">本月</span>
+        <span style="display:flex;gap:16px;">
+          <span>支出 <strong id="txSummaryExpense" style="color:var(--danger);">¥0.00</strong></span>
+          <span>收入 <strong id="txSummaryIncome" style="color:var(--success);">¥0.00</strong></span>
+        </span>
+      </div>
       <div style="padding:12px 16px;display:flex;gap:8px;">
         <input class="form-input" id="txSearch" placeholder="搜索备注、分类、标签、账户..." style="flex:1;">
         <button class="btn btn-outline" id="txFilterBtn" style="padding:10px 14px;">筛选</button>
@@ -3816,6 +3823,28 @@ const UI = {
   renderTransactions() {
     const list = document.getElementById('txListView');
     try {
+    // ===== 本月收支汇总条 =====
+    try {
+      const now = new Date();
+      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const monthTxs = Store.state.transactions.filter(tx => {
+        if (Store.state.currentLedgerId !== 'all' && !(tx.ledgerIds || []).includes(Store.state.currentLedgerId)) return false;
+        return tx.date.startsWith(monthKey);
+      });
+      let monthIncome = 0, monthExpense = 0;
+      monthTxs.forEach(tx => {
+        if (tx.type === 'income' || tx.type === 'reimburse_income') monthIncome += Number(tx.amount);
+        else if (tx.type === 'expense') monthExpense += Number(tx.amount);
+        else if (tx.type === 'renqing' && tx.direction === 'in') monthIncome += Number(tx.amount);
+        else if (tx.type === 'renqing' && tx.direction === 'out') monthExpense += Number(tx.amount);
+      });
+      const elExp = document.getElementById('txSummaryExpense');
+      const elInc = document.getElementById('txSummaryIncome');
+      if (elExp) elExp.textContent = '¥' + Util.fmtMoneyPlain(monthExpense);
+      if (elInc) elInc.textContent = '¥' + Util.fmtMoneyPlain(monthIncome);
+    } catch(e) { console.warn('汇总条计算失败:', e); }
+    // ===== 汇总条结束 =====
+
     const keyword = document.getElementById('txSearch').value;
     const f = this.filter;
     const txs = Store.filterTransactions({
@@ -6823,6 +6852,8 @@ const UI = {
         try { UI.renderHome(); } catch (e) { dbg('renderHome失败: ' + e.message); }
         try { UI.renderTransactions(); } catch (e) { dbg('renderTransactions失败: ' + e.message); }
         try { UI.renderAssets(); } catch (e) { dbg('renderAssets失败: ' + e.message); }
+        // 清理 URL 中的 quickadd hash，避免下次切回时重复处理
+        try { history.replaceState(null, '', window.location.origin + window.location.pathname + window.location.search); } catch(e) {}
       }
 
       // 始终显示完整诊断信息
@@ -8413,19 +8444,37 @@ if (typeof window !== 'undefined') {
     document.addEventListener('touchstart', primeAudio, { once: true });
     document.addEventListener('click', primeAudio, { once: true });
   }
+
+  // 全局刷新函数：保留滚动位置，重新加载数据并渲染
+  let _refreshTimer = null;
+  window.globalRefresh = async () => {
+    if (_refreshTimer) return; // 防抖，2秒内只刷新一次
+    _refreshTimer = setTimeout(() => { _refreshTimer = null; }, 2000);
+    const scrollY = window.scrollY; // 记录滚动位置
+    try {
+      await Store.loadAll();
+      // 根据当前页面选择渲染目标
+      UI.renderHome();
+      UI.renderTransactions();
+      UI.renderAssets();
+      // 恢复滚动位置
+      requestAnimationFrame(() => window.scrollTo(0, scrollY));
+      console.log('[Refresh] 前台数据已自动刷新');
+    } catch (e) { console.warn('前台刷新数据失败:', e); }
+  };
+
   // 页面从后台切回前台时，重新加载数据并渲染（解决快捷指令在新标签页记账后原标签页看不到的问题）
   if (document.addEventListener) {
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState === 'visible') {
-        try {
-          await Store.loadAll();
-          UI.renderHome();
-          UI.renderTransactions();
-          UI.renderAssets();
-        } catch (e) { console.warn('前台刷新数据失败:', e); }
+        window.globalRefresh();
       }
     });
   }
+  // focus 事件兜底：切换标签页回来时触发
+  window.addEventListener('focus', () => {
+    if (!document.hidden) window.globalRefresh();
+  });
 }
 // 导出供测试
 if (typeof module !== 'undefined' && module.exports) {
