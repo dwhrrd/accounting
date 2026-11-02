@@ -3287,7 +3287,28 @@ const Store = {
       reimburseStatus: 'none', relatedTxId: null, party: null,
       createdAt: Util.nowTime()
     };
-    await DB.add('transactions', tx);
+    // 写入重试：最多 3 次
+    let writeOk = false, lastErr = null;
+    for (let i = 0; i < 3; i++) {
+      try {
+        await DB.add('transactions', tx);
+        writeOk = true;
+        break;
+      } catch(e) {
+        lastErr = e;
+        console.warn(`[QuickAdd] 第 ${i+1} 次写入失败:`, e);
+        await new Promise(r => setTimeout(r, 200 * (i + 1))); // 递增等待
+      }
+    }
+    if (!writeOk) {
+      // 记录错误日志到 localStorage
+      try {
+        const log = JSON.parse(localStorage.getItem('quickadd_error_log') || '[]');
+        log.push({ time: new Date().toISOString(), error: lastErr.message, tx: tx });
+        localStorage.setItem('quickadd_error_log', JSON.stringify(log.slice(-20))); // 只保留最近20条
+      } catch(e) {}
+      return { ok: false, error: '写入数据库失败（已重试3次）: ' + lastErr.message };
+    }
     this.state.transactions.push(tx);
     // 回读验证：确认数据真的写进了IndexedDB
     const readback = await DB.getById('transactions', tx.id);
@@ -6865,6 +6886,12 @@ const UI = {
 
       const r = await Store.quickAdd(params);
       dbg('quickAdd 返回: ' + JSON.stringify(r));
+      // 记录成功/失败日志
+      try {
+        const log = JSON.parse(localStorage.getItem('quickadd_error_log') || '[]');
+        log.push({ time: new Date().toISOString(), ok: r.ok, error: r.error || '', amount: params.amount });
+        localStorage.setItem('quickadd_error_log', JSON.stringify(log.slice(-20)));
+      } catch(e) {}
 
       if (r.ok) {
         try { UI.renderHome(); } catch (e) { dbg('renderHome失败: ' + e.message); }
@@ -7769,9 +7796,15 @@ const UI = {
       if (payBackup) { await DB.remove('payables', payBackup.id); Store.state.payables = Store.state.payables.filter(p => p.id !== payBackup.id); }
     });
     Util.toast('已删除');
-    this.renderHome();
-    this.renderTransactions();
-    this.renderAssets();
+    // 优化：延迟到下一帧再渲染，避免和弹窗关闭的重排叠加导致闪烁
+    requestAnimationFrame(() => {
+      this.renderTransactions(); // 流水列表必须重绘
+      // 首页和资产页如果在后台，不需要立即重绘，切回去时再渲染
+      try {
+        if (document.getElementById('page-home').classList.contains('active')) this.renderHome();
+        if (document.getElementById('page-assets').classList.contains('active')) this.renderAssets();
+      } catch(e) {}
+    });
   },
 };
 
