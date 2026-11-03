@@ -1925,7 +1925,11 @@ body.dark[data-style="handdrawn"] .type-switch {
         </div>
       </div>
       <div class="card">
-        <div class="card-title">本月概览</div>
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>本月概览</span>
+          <span id="statFilterBtn" style="font-size:11px;color:var(--text-tertiary);cursor:pointer;padding:2px 6px;background:var(--bg-secondary);border-radius:6px;">口径</span>
+        </div>
+        <div id="statFilterHint" style="display:none;font-size:11px;color:var(--warning);margin-bottom:4px;text-align:center;"></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px;">
           <div><div style="font-size:12px;color:var(--text-secondary)">收入</div><div class="amount income" style="font-size:18px;font-weight:600;margin-top:4px;color:var(--success)" data-amount>¥0.00</div></div>
           <div><div style="font-size:12px;color:var(--text-secondary)">支出</div><div class="amount expense" style="font-size:18px;font-weight:600;margin-top:4px;color:var(--danger)" data-amount>¥0.00</div></div>
@@ -3161,11 +3165,20 @@ const Store = {
   },
 
   /* ---- 按月统计 ---- */
+  // 判断流水是否被剔除（用于统计口径）
+  isTxExcluded(tx) {
+    const excludedTags = (this.state.settings && this.state.settings.excludedTags) || [];
+    const excludedLedgers = (this.state.settings && this.state.settings.excludedLedgers) || [];
+    if (excludedTags.length > 0 && (tx.tags || []).some(t => excludedTags.includes(t))) return true;
+    if (excludedLedgers.length > 0 && (tx.ledgerIds || []).some(l => excludedLedgers.includes(l))) return true;
+    return false;
+  },
   getMonthStats(monthKey, ledgerId='all') {
     let income = 0, expense = 0;
     this.state.transactions.forEach(tx => {
       if (Util.monthKey(tx.date) !== monthKey) return;
       if (ledgerId !== 'all' && !(tx.ledgerIds || []).includes(ledgerId)) return;
+      if (this.isTxExcluded(tx)) return; // 统计口径：剔除指定标签/账本
       if (tx.type === 'income') income += Number(tx.amount);
       if (tx.type === 'expense') expense += Number(tx.amount);
       if (tx.type === 'renqing') { if (tx.direction === 'in') income += Number(tx.amount); else expense += Number(tx.amount); }
@@ -3474,13 +3487,14 @@ const Store = {
 
 
   /* ---- 筛选流水 ---- */
-  filterTransactions({ ledgerId='all', type, categoryId, accountId, tag, keyword, minAmount, maxAmount, startDate, endDate } = {}) {
+  filterTransactions({ ledgerId='all', type, categoryId, accountId, tag, keyword, minAmount, maxAmount, startDate, endDate, excludeStats=false } = {}) {
     return this.state.transactions.filter(tx => {
       if (ledgerId !== 'all' && !(tx.ledgerIds || []).includes(ledgerId)) return false;
       if (type && tx.type !== type) return false;
       if (categoryId && tx.categoryId !== categoryId && tx.parentCategoryId !== categoryId) return false;
       if (accountId && tx.accountId !== accountId && tx.toAccountId !== accountId) return false;
       if (tag && !(tx.tags || []).includes(tag)) return false;
+      if (excludeStats && this.isTxExcluded(tx)) return false; // 统计口径：剔除指定标签/账本
       if (keyword) {
         const kw = keyword.toLowerCase();
         const note = (tx.note || '').toLowerCase();
@@ -3817,6 +3831,19 @@ const UI = {
     if (dispEl) {
       animateNum(dispEl, disposable, v => Util.fmtMoney(v));
       dispEl.style.color = disposable >= 0 ? 'var(--success)' : 'var(--danger)';
+    }
+    // 统计口径提示
+    const excludedTags = (Store.state.settings && Store.state.settings.excludedTags) || [];
+    const excludedLedgers = (Store.state.settings && Store.state.settings.excludedLedgers) || [];
+    const hintEl = document.getElementById('statFilterHint');
+    if (hintEl) {
+      const count = excludedTags.length + excludedLedgers.length;
+      if (count > 0) {
+        hintEl.style.display = 'block';
+        hintEl.textContent = `[已剔除 ${count} 个标签/账本]`;
+      } else {
+        hintEl.style.display = 'none';
+      }
     }
     // 预算
     const budget = Store.getBudget(Store.state.currentLedgerId, month);
@@ -5484,7 +5511,7 @@ const UI = {
     const prevMonth = `${y}-${String(m - 1).padStart(2, '0')}`;
     const nextMonth = `${y}-${String(m + 1).padStart(2, '0')}`;
     const monthLabel = `${y}年${m}月`;
-    const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: month + '-01', endDate: month + '-31' });
+    const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: month + '-01', endDate: month + '-31', excludeStats: true });
     // 按一级分类聚合
     const incomeByCat = {}, expenseByCat = {};
     let totalIn = 0, totalOut = 0;
@@ -5591,7 +5618,7 @@ const UI = {
     const weekStart = monday.toISOString().split('T')[0];
     const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
     const weekEnd = sunday.toISOString().split('T')[0];
-    const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: weekStart, endDate: weekEnd });
+    const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: weekStart, endDate: weekEnd, excludeStats: true });
     let income = 0, expense = 0;
     const expenseByCat = {}, expenseBySubCat = {}, incomeByCat = {};
     txs.forEach(tx => {
@@ -5625,7 +5652,7 @@ const UI = {
     const lastStart = lastMonday.toISOString().split('T')[0];
     const lastSunday = new Date(lastMonday); lastSunday.setDate(lastMonday.getDate() + 6);
     const lastEnd = lastSunday.toISOString().split('T')[0];
-    const lastTxs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: lastStart, endDate: lastEnd });
+    const lastTxs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: lastStart, endDate: lastEnd, excludeStats: true });
     let lastIncome = 0, lastExpense = 0;
     lastTxs.forEach(tx => {
       if (tx.type === 'income' || tx.type === 'reimburse_income') lastIncome += Number(tx.amount);
@@ -5654,6 +5681,27 @@ const UI = {
         <div class="subcat-body" style="display:none;">${subItems}</div>
       </div>`;
     }).join('');
+    // Top 10 流水排行
+    const weekExpenseTop10 = txs.filter(t => t.type === 'expense').sort((a, b) => Number(b.amount) - Number(a.amount)).slice(0, 10);
+    const weekIncomeTop10 = txs.filter(t => t.type === 'income' || t.type === 'reimburse_income').sort((a, b) => Number(b.amount) - Number(a.amount)).slice(0, 10);
+    const renderWeekTop10 = (list, type) => {
+      if (list.length === 0) return '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无记录</div>';
+      return list.map((tx, i) => {
+        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '其他' };
+        const shortDate = tx.date.substring(5);
+        const amountCls = type === 'expense' ? 'var(--danger)' : 'var(--success)';
+        const sign = type === 'expense' ? '-' : '+';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <span style="width:20px;text-align:center;color:var(--text-tertiary);font-weight:600;">${i + 1}</span>
+          <span style="font-size:16px;">${cat.icon || '📦'}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${cat.name || '其他'}</div>
+            <div style="font-size:11px;color:var(--text-tertiary);">${shortDate}${tx.note ? ' · ' + tx.note : ''}</div>
+          </div>
+          <span style="color:${amountCls};font-weight:600;" data-amount>${sign}${Util.fmtMoneyPlain(tx.amount)}</span>
+        </div>`;
+      }).join('');
+    };
     Router.openSubpage('周度复盘', `
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
         <button class="review-nav-btn" id="weekPrev"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>上周</button>
@@ -5675,6 +5723,10 @@ const UI = {
       <div class="card" id="weekExpenseDonut">${expense > 0 ? '' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无支出</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">二级分类明细（点击展开）</div>
       <div class="card">${subCatHtml || '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无支出</div>'}</div>
+      <div style="padding:8px 16px;font-size:14px;font-weight:600;">💸 最大支出 Top 10</div>
+      <div class="card">${renderWeekTop10(weekExpenseTop10, 'expense')}</div>
+      <div style="padding:8px 16px;font-size:14px;font-weight:600;">💰 最大收入 Top 10</div>
+      <div class="card">${renderWeekTop10(weekIncomeTop10, 'income')}</div>
     `);
     setTimeout(() => {
       document.getElementById('weekPrev').onclick = () => this.openWeekReview(offsetWeeks - 1);
@@ -5704,7 +5756,7 @@ const UI = {
     this._reviewMonth = month;
     const [year, m] = month.split('-').map(Number);
     const stats = Store.getMonthStats(month, Store.state.currentLedgerId);
-    const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: month + '-01', endDate: month + '-31' });
+    const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: month + '-01', endDate: month + '-31', excludeStats: true });
     // 按一级分类聚合
     const expenseByCat = {};
     const incomeByCat = {};
@@ -5744,6 +5796,27 @@ const UI = {
     // 支出方式排行
     const accountRank = Object.entries(expenseByAccount).sort((a, b) => b[1] - a[1]);
     const maxAccount = accountRank.length > 0 ? accountRank[0][1] : 1;
+    // Top 10 流水排行
+    const expenseTop10 = txs.filter(t => t.type === 'expense').sort((a, b) => Number(b.amount) - Number(a.amount)).slice(0, 10);
+    const incomeTop10 = txs.filter(t => t.type === 'income' || t.type === 'reimburse_income').sort((a, b) => Number(b.amount) - Number(a.amount)).slice(0, 10);
+    const renderTop10 = (list, type) => {
+      if (list.length === 0) return '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无记录</div>';
+      return list.map((tx, i) => {
+        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '其他' };
+        const shortDate = tx.date.substring(5); // 只显示 MM-DD
+        const amountCls = type === 'expense' ? 'var(--danger)' : 'var(--success)';
+        const sign = type === 'expense' ? '-' : '+';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <span style="width:20px;text-align:center;color:var(--text-tertiary);font-weight:600;">${i + 1}</span>
+          <span style="font-size:16px;">${cat.icon || '📦'}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${cat.name || '其他'}</div>
+            <div style="font-size:11px;color:var(--text-tertiary);">${shortDate}${tx.note ? ' · ' + tx.note : ''}</div>
+          </div>
+          <span style="color:${amountCls};font-weight:600;" data-amount>${sign}${Util.fmtMoneyPlain(tx.amount)}</span>
+        </div>`;
+      }).join('');
+    };
     // 二级分类展开HTML
     const subCatHtml = Object.entries(expenseBySubCat).sort((a, b) => {
       const aTotal = Object.values(a[1]).reduce((s, v) => s + v, 0);
@@ -5801,6 +5874,10 @@ const UI = {
           <div class="progress-bar" style="height:6px;"><div class="fill" style="width:${pct}%;"></div></div>
         </div>`;
       }).join('')}</div>
+      <div style="padding:8px 16px;font-size:14px;font-weight:600;">💸 最大支出 Top 10</div>
+      <div class="card">${renderTop10(expenseTop10, 'expense')}</div>
+      <div style="padding:8px 16px;font-size:14px;font-weight:600;">💰 最大收入 Top 10</div>
+      <div class="card">${renderTop10(incomeTop10, 'income')}</div>
     `);
     setTimeout(() => {
       document.getElementById('reviewPrevMonth').onclick = () => {
@@ -5850,7 +5927,7 @@ const UI = {
     // 月度收支趋势数据
     const yearTrendData = monthlyData.map(d => ({ month: `${d.month}月`, income: d.income, expense: d.expense }));
     // 年度分类聚合
-    const yearTxs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: year + '-01-01', endDate: year + '-12-31' });
+    const yearTxs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: year + '-01-01', endDate: year + '-12-31', excludeStats: true });
     const expenseByCat = {}, incomeByCat = {}, expenseBySubCat = {}, expenseByAccount = {};
     yearTxs.forEach(tx => {
       const pcat = Store.getCategory(tx.parentCategoryId) || { name: '其他' };
@@ -5907,6 +5984,27 @@ const UI = {
     const overallReturnRate = totalInterestAsset > 0 ? (totalInterest / totalInterestAsset * 100) : 0;
     const profitableProducts = productPerformance.filter(p => p.return > 0).sort((a, b) => b.return - a.return);
     const lossProducts = productPerformance.filter(p => p.return <= 0);
+    // Top 10 流水排行
+    const yearExpenseTop10 = yearTxs.filter(t => t.type === 'expense').sort((a, b) => Number(b.amount) - Number(a.amount)).slice(0, 10);
+    const yearIncomeTop10 = yearTxs.filter(t => t.type === 'income' || t.type === 'reimburse_income').sort((a, b) => Number(b.amount) - Number(a.amount)).slice(0, 10);
+    const renderYearTop10 = (list, type) => {
+      if (list.length === 0) return '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无记录</div>';
+      return list.map((tx, i) => {
+        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '其他' };
+        const shortDate = tx.date.substring(5);
+        const amountCls = type === 'expense' ? 'var(--danger)' : 'var(--success)';
+        const sign = type === 'expense' ? '-' : '+';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <span style="width:20px;text-align:center;color:var(--text-tertiary);font-weight:600;">${i + 1}</span>
+          <span style="font-size:16px;">${cat.icon || '📦'}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${cat.name || '其他'}</div>
+            <div style="font-size:11px;color:var(--text-tertiary);">${shortDate}${tx.note ? ' · ' + tx.note : ''}</div>
+          </div>
+          <span style="color:${amountCls};font-weight:600;" data-amount>${sign}${Util.fmtMoneyPlain(tx.amount)}</span>
+        </div>`;
+      }).join('');
+    };
 
     Router.openSubpage('年度复盘', `
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
@@ -5936,6 +6034,10 @@ const UI = {
           <div class="progress-bar" style="height:6px;"><div class="fill" style="width:${pct}%;"></div></div>
         </div>`;
       }).join('') || '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无支出</div>'}</div>
+      <div style="padding:8px 16px;font-size:14px;font-weight:600;">💸 最大支出 Top 10</div>
+      <div class="card">${renderYearTop10(yearExpenseTop10, 'expense')}</div>
+      <div style="padding:8px 16px;font-size:14px;font-weight:600;">💰 最大收入 Top 10</div>
+      <div class="card">${renderYearTop10(yearIncomeTop10, 'income')}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">理财成绩</div>
       <div class="card">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px;margin-bottom:12px;align-items:end;">
@@ -7816,6 +7918,65 @@ const UI = {
     }, 50);
   },
 
+  openStatFilter() {
+    const excludedTags = (Store.state.settings && Store.state.settings.excludedTags) || [];
+    const excludedLedgers = (Store.state.settings && Store.state.settings.excludedLedgers) || [];
+    const allTags = Store.state.tags || [];
+    const allLedgers = Store.state.ledgers || [];
+    Router.openSubpage('统计口径设置', `
+      <div style="padding:16px;">
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5;">
+          勾选要从「统计」中剔除的标签或账本。<br>
+          被剔除的流水仍然会显示在列表里，只是不计入总收支、图表和储蓄率的计算。
+        </div>
+        <div class="form-group"><label class="form-label">剔除标签（多选）</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${allTags.length === 0 ? '<div style="color:var(--text-tertiary);font-size:13px;">暂无标签</div>' : allTags.map(t => `
+              <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg-secondary);border-radius:8px;cursor:pointer;">
+                <input type="checkbox" class="stat-exclude-tag" value="${t.name}" ${excludedTags.includes(t.name) ? 'checked' : ''}> ${t.name}
+              </label>`).join('')}
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">剔除账本（多选）</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${allLedgers.length === 0 ? '<div style="color:var(--text-tertiary);font-size:13px;">暂无账本</div>' : allLedgers.map(l => `
+              <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg-secondary);border-radius:8px;cursor:pointer;">
+                <input type="checkbox" class="stat-exclude-ledger" value="${l.id}" ${excludedLedgers.includes(l.id) ? 'checked' : ''}> ${l.name}
+              </label>`).join('')}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button class="form-btn secondary" id="statFilterReset" style="flex:1;">重置为默认</button>
+          <button class="form-btn primary" id="statFilterSave" style="flex:1;">保存设置</button>
+        </div>
+      </div>
+    `);
+    setTimeout(() => {
+      document.getElementById('statFilterSave').onclick = async () => {
+        const newExcludedTags = Array.from(document.querySelectorAll('.stat-exclude-tag:checked')).map(el => el.value);
+        const newExcludedLedgers = Array.from(document.querySelectorAll('.stat-exclude-ledger:checked')).map(el => el.value);
+        if (!Store.state.settings) Store.state.settings = {};
+        Store.state.settings.excludedTags = newExcludedTags;
+        Store.state.settings.excludedLedgers = newExcludedLedgers;
+        await Store.saveSetting('excludedTags', newExcludedTags);
+        await Store.saveSetting('excludedLedgers', newExcludedLedgers);
+        Router.closeSubpage();
+        Util.toast('统计口径已更新');
+        this.renderHome();
+        this.renderTransactions();
+      };
+      document.getElementById('statFilterReset').onclick = async () => {
+        if (!Store.state.settings) Store.state.settings = {};
+        Store.state.settings.excludedTags = [];
+        Store.state.settings.excludedLedgers = [];
+        await Store.saveSetting('excludedTags', []);
+        await Store.saveSetting('excludedLedgers', []);
+        Router.closeSubpage();
+        Util.toast('已重置为默认');
+        this.renderHome();
+      };
+    }, 0);
+  },
   openFilter() {
     const f = this.filter;
     const typeOptions = ['<option value="">全部类型</option>',
@@ -8366,6 +8527,8 @@ async function initApp() {
     document.getElementById('fabAdd').onclick = () => AddSheet.open();
     document.getElementById('sheetClose').onclick = () => AddSheet.close();
     document.getElementById('sheetMask').onclick = () => AddSheet.close();
+    // 统计口径按钮
+    document.getElementById('statFilterBtn').onclick = () => UI.openStatFilter();
 
     // 类型切换
     document.querySelectorAll('#typeSwitch button').forEach(btn => {
