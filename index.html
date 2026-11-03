@@ -1899,6 +1899,10 @@ body.dark[data-style="handdrawn"] .type-switch {
       </div>
     </div>
     <div class="topbar-actions">
+      <button class="icon-btn" id="statFilterBtn" title="统计口径" style="font-size:12px;width:auto;padding:0 10px;border-radius:20px;background:rgba(212,149,107,0.12);display:flex;align-items:center;gap:3px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.7;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        口径
+      </button>
       <button class="icon-btn" id="undoBtn" title="撤销" style="opacity:0.3;pointer-events:none;">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
       </button>
@@ -1925,10 +1929,7 @@ body.dark[data-style="handdrawn"] .type-switch {
         </div>
       </div>
       <div class="card">
-        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
-          <span>本月概览</span>
-          <span id="statFilterBtn" style="font-size:11px;color:var(--text-tertiary);cursor:pointer;padding:2px 6px;background:var(--bg-secondary);border-radius:6px;">口径</span>
-        </div>
+        <div class="card-title">本月概览</div>
         <div id="statFilterHint" style="display:none;font-size:11px;color:var(--warning);margin-bottom:4px;text-align:center;"></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px;">
           <div><div style="font-size:12px;color:var(--text-secondary)">收入</div><div class="amount income" style="font-size:18px;font-weight:600;margin-top:4px;color:var(--success)" data-amount>¥0.00</div></div>
@@ -3845,6 +3846,20 @@ const UI = {
         hintEl.style.display = 'none';
       }
     }
+    // 口径按钮高亮
+    const statBtn = document.getElementById('statFilterBtn');
+    if (statBtn) {
+      const count = excludedTags.length + excludedLedgers.length;
+      if (count > 0) {
+        statBtn.style.background = 'rgba(212,149,107,0.35)';
+        statBtn.style.color = 'var(--primary)';
+        statBtn.style.fontWeight = '600';
+      } else {
+        statBtn.style.background = 'rgba(212,149,107,0.12)';
+        statBtn.style.color = '';
+        statBtn.style.fontWeight = '';
+      }
+    }
     // 预算
     const budget = Store.getBudget(Store.state.currentLedgerId, month);
     const budgetAmount = budget ? Number(budget.amount) : 0;
@@ -5331,7 +5346,7 @@ const UI = {
           if (!input) { Util.toast('输入框未找到'); return; }
           const name = input.value.trim();
           if (!name) { Util.toast('请输入标签名称'); input.focus(); return; }
-          if (Store.state.tags.find(t => t.name === name)) { Util.toast('标签已存在'); return; }
+          if (Store.state.tags.find(t => t.name.toLowerCase() === name.toLowerCase())) { Util.toast('标签已存在'); return; }
           const tag = { id: Util.uid(), name, color: '#6b7280' };
           await DB.add('tags', tag);
           Store.state.tags.push(tag);
@@ -7649,6 +7664,19 @@ const UI = {
         const icon = document.getElementById('catIcon').value.trim() || '📦';
         const finalType = editingChild ? catType : document.getElementById('catType').value;
         const finalParentId = editingChild ? document.getElementById('catParent').value : null;
+        // 防重复校验
+        const lowerName = name.toLowerCase();
+        const duplicate = Store.state.categories.find(c => {
+          if (c.id === (cat ? cat.id : null)) return false; // 编辑时排除自己
+          if (editingChild) {
+            // 二级分类：同一父分类下查重
+            return c.parentId === finalParentId && c.name.toLowerCase() === lowerName;
+          } else {
+            // 一级分类：同类型下查重
+            return !c.parentId && c.type === finalType && c.name.toLowerCase() === lowerName;
+          }
+        });
+        if (duplicate) { Util.toast('该分类已存在，请勿重复添加'); return; }
         const data = { id: cat ? cat.id : Util.uid(), name, type: finalType, parentId: finalParentId, icon, sort: cat ? cat.sort : 0 };
         if (isEdit) { await DB.put('categories', data); const idx = Store.state.categories.findIndex(c => c.id === cat.id); Store.state.categories[idx] = data; }
         else { await DB.add('categories', data); Store.state.categories.push(data); }
@@ -7945,9 +7973,9 @@ const UI = {
               </label>`).join('')}
           </div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:16px;">
-          <button class="form-btn secondary" id="statFilterReset" style="flex:1;">重置为默认</button>
-          <button class="form-btn primary" id="statFilterSave" style="flex:1;">保存设置</button>
+        <div style="display:flex;gap:12px;margin-top:30px;">
+          <button id="statFilterReset" style="flex:1;height:44px;border-radius:12px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);font-size:15px;cursor:pointer;">重置为默认</button>
+          <button id="statFilterSave" style="flex:1;height:44px;border-radius:12px;background:var(--primary);border:none;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">保存设置</button>
         </div>
       </div>
     `);
@@ -8685,7 +8713,7 @@ async function initApp() {
         e.preventDefault();
         e.stopPropagation();
         const tagName = e.target.value.trim();
-        if (!Store.state.tags.find(t => t.name === tagName)) {
+        if (!Store.state.tags.find(t => t.name.toLowerCase() === tagName.toLowerCase())) {
           const tag = { id: Util.uid(), name: tagName, color: '#6b7280' };
           await DB.add('tags', tag);
           Store.state.tags.push(tag);
