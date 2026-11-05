@@ -9,6 +9,7 @@
 <meta name="app-version" content="2026.11.02">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>账房管家</title>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <style>
 /* ===== CSS 变量与主题 ===== */
 :root {
@@ -171,16 +172,33 @@ a { text-decoration: none; color: inherit; }
   user-select: none;
   -webkit-user-select: none;
 }
-.draggable-item.dragging, .draggable-subitem.dragging {
-  transform: scale(1.03);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  background: var(--bg-card);
-  z-index: 100;
-  position: relative;
+.draggable-item.drag-chosen, .draggable-subitem.drag-chosen {
+  cursor: grabbing;
 }
-.draggable-item.drag-over, .draggable-subitem.drag-over {
-  transform: translateY(4px);
-  opacity: 0.7;
+/* 占位符（原位置） */
+.my-drag-ghost {
+  opacity: 0.3 !important;
+  background: #f4f1e8 !important;
+  border: 2px dashed #a99a87 !important;
+  border-radius: 8px !important;
+  margin: 4px 0 !important;
+  min-height: 48px !important;
+}
+.my-drag-ghost * {
+  visibility: hidden !important;
+}
+/* 跟手实体（fallback 模式） */
+.sortable-fallback {
+  opacity: 0.95 !important;
+  background: #ffffff !important;
+  border: 1px solid #e0d6c8 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18) !important;
+  z-index: 99999 !important;
+  border-radius: 8px !important;
+  transition: none !important;
+}
+.drag-handle {
+  touch-action: none;
 }
 
 /* ===== 底部导航 ===== */
@@ -7435,35 +7453,36 @@ const UI = {
       const renderCat = (cat, index, siblings, type) => {
         const children = Store.getChildCategories(cat.id);
         const txCount = Store.state.transactions.filter(t => t.categoryId === cat.id || t.parentCategoryId === cat.id).length;
-        return `<div class="list-item draggable-item" data-cat-id="${cat.id}" data-type="${type}">
-          <div class="icon-wrap" style="background:var(--primary-bg);">${cat.icon || '📦'}</div>
-          <div class="item-main"><div class="item-title">${cat.name} ${txCount > 0 ? '<span class="tag">' + txCount + '笔</span>' : ''}</div>
-          <div class="item-sub">${children.length} 个二级分类</div></div>
-          <button class="icon-btn" data-edit-parent="${cat.id}" style="width:28px;height:28px;" onclick="event.stopPropagation();"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-          <div class="item-value" style="color:var(--text-tertiary);font-size:13px;">展开</div>
-        </div>
-        <div class="cat-children" id="children-${cat.id}" style="padding-left:40px;">
-          ${children.map(c => {
-            const cTxCount = Store.state.transactions.filter(t => t.categoryId === c.id).length;
-            return `<div class="list-item draggable-subitem" data-cat-id="${c.id}" data-parent-id="${cat.id}">
-              <div class="icon-wrap" style="background:var(--bg-page);width:28px;height:28px;font-size:14px;">${c.icon || '📦'}</div>
-              <div class="item-main"><div class="item-title" style="font-size:14px;">${c.name} ${cTxCount > 0 ? '<span class="tag">' + cTxCount + '笔</span>' : ''}</div></div>
-              <button class="icon-btn" data-edit-cat="${c.id}" style="width:28px;height:28px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-              <button class="icon-btn" data-del-cat="${c.id}" style="width:28px;height:28px;color:var(--danger);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
-            </div>`;
-          }).join('')}
+        return `<div class="draggable-item category-group" data-cat-id="${cat.id}" data-type="${type}" style="margin-bottom:0;">
+          <div class="list-item cat-header" data-cat-id="${cat.id}" style="cursor:grab;">
+            <div class="drag-handle" style="cursor:grab;color:var(--text-tertiary);padding:0 8px 0 0;font-size:18px;line-height:1;">≡</div>
+            <div class="icon-wrap" style="background:var(--primary-bg);">${cat.icon || '📦'}</div>
+            <div class="item-main"><div class="item-title">${cat.name} ${txCount > 0 ? '<span class="tag">' + txCount + '笔</span>' : ''}</div>
+            <div class="item-sub">${children.length} 个二级分类</div></div>
+            <button class="icon-btn" data-edit-parent="${cat.id}" style="width:28px;height:28px;" onclick="event.stopPropagation();"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <div class="item-value" style="color:var(--text-tertiary);font-size:13px;">展开</div>
+          </div>
+          <div class="cat-children" id="children-${cat.id}" style="padding-left:40px;">
+            ${children.map(c => {
+              const cTxCount = Store.state.transactions.filter(t => t.categoryId === c.id).length;
+              return `<div class="list-item draggable-subitem" data-cat-id="${c.id}" data-parent-id="${cat.id}">
+                <div class="icon-wrap" style="background:var(--bg-page);width:28px;height:28px;font-size:14px;">${c.icon || '📦'}</div>
+                <div class="item-main"><div class="item-title" style="font-size:14px;">${c.name} ${cTxCount > 0 ? '<span class="tag">' + cTxCount + '笔</span>' : ''}</div></div>
+                <button class="icon-btn" data-edit-cat="${c.id}" style="width:28px;height:28px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="icon-btn" data-del-cat="${c.id}" style="width:28px;height:28px;color:var(--danger);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+              </div>`;
+            }).join('')}
           <div style="padding:8px 16px;"><button class="btn btn-outline" data-add-child="${cat.id}" style="width:100%;padding:8px;font-size:13px;">+ 添加二级分类</button></div>
+          </div>
         </div>`;
       };
       Router.openSubpage('分类管理', `
         <div style="padding:8px 16px;font-size:13px;color:var(--text-secondary);font-weight:600;">支出分类</div>
-        <div id="expenseCatList">${expenseParents.map((cat, i) => renderCat(cat, i, expenseParents, 'expense')).join('')}
-          <div style="padding:8px 16px;"><button class="btn btn-outline" id="addExpenseCat" style="width:100%;padding:8px;font-size:13px;">+ 添加支出一级分类</button></div>
-        </div>
+        <div id="expenseCatList">${expenseParents.map((cat, i) => renderCat(cat, i, expenseParents, 'expense')).join('')}</div>
+        <div style="padding:8px 16px;"><button class="btn btn-outline" id="addExpenseCat" style="width:100%;padding:8px;font-size:13px;">+ 添加支出一级分类</button></div>
         <div style="padding:8px 16px;font-size:13px;color:var(--text-secondary);font-weight:600;margin-top:12px;">收入分类</div>
-        <div id="incomeCatList">${incomeParents.map((cat, i) => renderCat(cat, i, incomeParents, 'income')).join('')}
-          <div style="padding:8px 16px;"><button class="btn btn-outline" id="addIncomeCat" style="width:100%;padding:8px;font-size:13px;">+ 添加收入一级分类</button></div>
-        </div>
+        <div id="incomeCatList">${incomeParents.map((cat, i) => renderCat(cat, i, incomeParents, 'income')).join('')}</div>
+        <div style="padding:8px 16px;"><button class="btn btn-outline" id="addIncomeCat" style="width:100%;padding:8px;font-size:13px;">+ 添加收入一级分类</button></div>
       `);
       setTimeout(() => {
         // 展开/收起（动态计算高度，不写死）
@@ -7502,94 +7521,50 @@ const UI = {
         document.querySelectorAll('[data-edit-parent]').forEach(btn => {
           btn.onclick = (e) => { e.stopPropagation(); this.editCategory(btn.dataset.editParent, null, render); };
         });
-        // 长按拖拽排序
-        const initDragSort = (containerSelector, isSub = false) => {
+        // 拖拽排序（使用 SortableJS）
+        const initDragSort = (containerSelector, isSub = false, groupName = '') => {
           const container = document.querySelector(containerSelector);
-          if (!container) return;
-          let dragEl = null, longPressTimer = null, startY = 0, startX = 0, dragging = false;
-          const items = () => container.querySelectorAll(isSub ? '.draggable-subitem' : '.draggable-item');
+          if (!container || typeof Sortable === 'undefined') return;
+          const itemsSelector = isSub ? '.draggable-subitem' : '.draggable-item';
           
-          const onTouchStart = (e) => {
-            const item = e.target.closest(isSub ? '.draggable-subitem' : '.draggable-item');
-            if (!item) return;
-            // 如果点的是按钮，不触发拖拽
-            if (e.target.closest('button')) return;
-            startY = e.touches[0].clientY;
-            startX = e.touches[0].clientX;
-            longPressTimer = setTimeout(() => {
-              dragging = true;
-              dragEl = item;
-              item.classList.add('dragging');
-              // 震动反馈
-              if (navigator.vibrate) navigator.vibrate(10);
-            }, 300); // 长按 300ms 触发
-          };
-          
-          const onTouchMove = (e) => {
-            if (!dragging || !dragEl) return;
-            e.preventDefault(); // 阻止页面滚动
-            const touchY = e.touches[0].clientY;
-            const itemsList = Array.from(items());
-            const dragIndex = itemsList.indexOf(dragEl);
-            
-            // 找到当前位置应该插入到哪个元素前面
-            let insertBefore = null;
-            for (let i = 0; i < itemsList.length; i++) {
-              if (itemsList[i] === dragEl) continue;
-              const rect = itemsList[i].getBoundingClientRect();
-              if (touchY < rect.top + rect.height / 2) {
-                insertBefore = itemsList[i];
-                break;
-              }
-            }
-            
-            // 高亮目标位置
-            itemsList.forEach(it => it.classList.remove('drag-over'));
-            if (insertBefore) insertBefore.classList.add('drag-over');
-            
-            // 移动元素
-            if (insertBefore) {
-              container.insertBefore(dragEl, insertBefore);
-            } else {
-              container.appendChild(dragEl);
-            }
-          };
-          
-          const onTouchEnd = async () => {
-            clearTimeout(longPressTimer);
-            if (!dragging || !dragEl) return;
-            dragging = false;
-            dragEl.classList.remove('dragging');
-            items().forEach(it => it.classList.remove('drag-over'));
-            
-            // 保存新顺序
-            const newOrder = Array.from(items()).map(el => el.dataset.catId);
-            try {
-              for (let i = 0; i < newOrder.length; i++) {
-                const cat = Store.state.categories.find(c => c.id === newOrder[i]);
-                if (cat) {
-                  cat.sort = i;
-                  await DB.put('categories', cat);
+          Sortable.create(container, {
+            group: {
+              name: groupName || (isSub ? 'sub' : 'main'),
+              pull: false,
+              put: false
+            },
+            handle: isSub ? '' : '.drag-handle',
+            delay: 150,
+            delayOnTouchOnly: true,
+            touchStartThreshold: 3,
+            forceFallback: true,
+            fallbackOnBody: true,
+            animation: 150,
+            ghostClass: 'my-drag-ghost',
+            chosenClass: 'drag-chosen',
+            dragClass: 'drag-dragging',
+            onEnd: async (evt) => {
+              const items = container.querySelectorAll(itemsSelector);
+              const newOrder = Array.from(items).map(el => el.dataset.catId);
+              try {
+                for (let i = 0; i < newOrder.length; i++) {
+                  const cat = Store.state.categories.find(c => c.id === newOrder[i]);
+                  if (cat) {
+                    cat.sort = i;
+                    await DB.put('categories', cat);
+                  }
                 }
-              }
-              // 广播数据更新
-              try { if (window._syncChannel) window._syncChannel.postMessage('data_updated'); } catch(e) {}
-            } catch(e) { console.warn('保存排序失败:', e); }
-            
-            dragEl = null;
-          };
-          
-          container.addEventListener('touchstart', onTouchStart, { passive: true });
-          container.addEventListener('touchmove', onTouchMove, { passive: false });
-          container.addEventListener('touchend', onTouchEnd);
-          container.addEventListener('touchcancel', onTouchEnd);
+                try { if (window._syncChannel) window._syncChannel.postMessage('data_updated'); } catch(e) {}
+              } catch(e) { console.warn('保存排序失败:', e); }
+            }
+          });
         };
-        // 初始化一级分类拖拽排序
-        initDragSort('#expenseCatList');
-        initDragSort('#incomeCatList');
+        // 初始化一级分类拖拽排序（收支独立，禁止跨组）
+        initDragSort('#expenseCatList', false, 'expense');
+        initDragSort('#incomeCatList', false, 'income');
         // 初始化所有二级分类容器的拖拽排序
         document.querySelectorAll('.cat-children').forEach(container => {
-          initDragSort('#' + container.id, true);
+          initDragSort('#' + container.id, true, 'sub-' + container.id);
         });
         // 添加二级分类
         document.querySelectorAll('[data-add-child]').forEach(btn => {
