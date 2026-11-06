@@ -2021,11 +2021,12 @@ body.dark[data-style="handdrawn"] .type-switch {
     <section class="page" id="page-transactions">
       <!-- 吸顶区域：搜索栏 + 日期汇总栏 -->
       <div style="position:sticky;top:0;z-index:50;background:var(--bg-page);padding-top:8px;">
-        <!-- 第一行：搜索 + 筛选 + 日历 -->
-        <div style="padding:0 16px 8px;display:flex;gap:8px;">
-          <input class="form-input" id="txSearch" placeholder="搜索备注、分类、标签、账户..." style="flex:1;">
-          <button class="btn btn-outline" id="txFilterBtn" style="padding:10px 14px;">筛选</button>
-          <button class="btn btn-outline" id="txViewBtn" style="padding:10px 14px;">日历</button>
+        <!-- 第一行：搜索 + 筛选 + 日历 + 分析 -->
+        <div style="padding:0 16px 8px;display:flex;gap:6px;">
+          <input class="form-input" id="txSearch" placeholder="搜索备注、分类、标签、账户..." style="flex:1;min-width:0;">
+          <button class="btn btn-outline" id="txFilterBtn" style="padding:10px 10px;font-size:13px;">筛选</button>
+          <button class="btn btn-outline" id="txViewBtn" style="padding:10px 10px;font-size:13px;">日历</button>
+          <button class="btn btn-outline" id="txAnalysisBtn" style="padding:10px 10px;font-size:13px;">分析</button>
         </div>
         <!-- 第二行：月份汇总 + 重置 -->
         <div id="txMonthSummary" style="margin:0 16px 8px;padding:10px 14px;background:var(--primary-bg);border-radius:var(--radius-sm);display:flex;justify-content:space-between;align-items:center;font-size:13px;">
@@ -5755,6 +5756,14 @@ const UI = {
       }).join('');
     };
     Router.openSubpage('资金流向', `
+      <div style="padding:8px 16px;">
+        <div style="display:flex;background:var(--bg-secondary);border-radius:20px;padding:3px;gap:2px;">
+          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;background:var(--primary);color:#fff;font-weight:600;">资金流向</div>
+          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">周复盘</div>
+          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">月复盘</div>
+          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">年复盘</div>
+        </div>
+      </div>
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
         <button class="review-nav-btn" id="flowPrevMonth"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>上月</button>
         <span class="review-date-label clickable-month" data-current="${month}" style="cursor:pointer;">${monthLabel}</span>
@@ -5789,6 +5798,16 @@ const UI = {
     if (prevBtn) prevBtn.onclick = () => this.openFlowAnalysis(prevMonth);
     const nextBtn = document.getElementById('flowNextMonth');
     if (nextBtn) nextBtn.onclick = () => this.openFlowAnalysis(nextMonth);
+    // 绑定 Tab 切换
+    document.querySelectorAll('.review-tab').forEach(tab => {
+      tab.onclick = () => {
+        const t = tab.dataset.tab;
+        if (t === 'flow') this.openFlowAnalysis(month);
+        else if (t === 'week') this.openWeekReview();
+        else if (t === 'month') this.openMonthReview(month);
+        else if (t === 'year') this.openYearReview();
+      };
+    });
   },
 
   openWeekReview(offsetWeeks=0) {
@@ -5867,7 +5886,7 @@ const UI = {
     const renderWeekTop10 = (list, type) => {
       if (list.length === 0) return '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无记录</div>';
       return list.map((tx, i) => {
-        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '' };
+        const cat = Store.getCategory(tx.categoryId) || { icon: '', name: '' };
         const parentCat = Store.getCategory(tx.parentCategoryId) || { icon: '', name: '' };
         const acc = Store.getAccount(tx.accountId);
         // 分类名拼接：有二级时 "一级 - 二级"，只有一级时单独显示
@@ -5895,6 +5914,14 @@ const UI = {
       }).join('');
     };
     Router.openSubpage('周度复盘', `
+      <div style="padding:8px 16px;">
+        <div style="display:flex;background:var(--bg-secondary);border-radius:20px;padding:3px;gap:2px;">
+          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">资金流向</div>
+          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;background:var(--primary);color:#fff;font-weight:600;">周复盘</div>
+          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">月复盘</div>
+          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">年复盘</div>
+        </div>
+      </div>
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
         <button class="review-nav-btn" id="weekPrev"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>上周</button>
         <span class="review-date-label clickable-month" data-current="${weekStart}" data-mode="date" style="cursor:pointer;">${weekStart} ~ ${weekEnd}</span>
@@ -5923,6 +5950,16 @@ const UI = {
     setTimeout(() => {
       document.getElementById('weekPrev').onclick = () => this.openWeekReview(offsetWeeks - 1);
       document.getElementById('weekNext').onclick = () => this.openWeekReview(offsetWeeks + 1);
+      // 绑定 Tab 切换
+      document.querySelectorAll('.review-tab').forEach(tab => {
+        tab.onclick = () => {
+          const t = tab.dataset.tab;
+          if (t === 'flow') this.openFlowAnalysis();
+          else if (t === 'week') this.openWeekReview(offsetWeeks);
+          else if (t === 'month') this.openMonthReview();
+          else if (t === 'year') this.openYearReview();
+        };
+      });
       // 渲染周复盘饼图
       if (income > 0) {
         const incomeData = Object.entries(incomeByCat).sort((a,b)=>b[1]-a[1]).map(([name, value]) => ({ name, value }));
@@ -5994,7 +6031,7 @@ const UI = {
     const renderTop10 = (list, type) => {
       if (list.length === 0) return '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无记录</div>';
       return list.map((tx, i) => {
-        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '' };
+        const cat = Store.getCategory(tx.categoryId) || { icon: '', name: '' };
         const parentCat = Store.getCategory(tx.parentCategoryId) || { icon: '', name: '' };
         const acc = Store.getAccount(tx.accountId);
         // 分类名拼接：有二级时 "一级 - 二级"，只有一级时单独显示
@@ -6045,6 +6082,14 @@ const UI = {
       </div>`;
     }).join('');
     Router.openSubpage('月度复盘', `
+      <div style="padding:8px 16px;">
+        <div style="display:flex;background:var(--bg-secondary);border-radius:20px;padding:3px;gap:2px;">
+          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">资金流向</div>
+          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">周复盘</div>
+          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;background:var(--primary);color:#fff;font-weight:600;">月复盘</div>
+          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">年复盘</div>
+        </div>
+      </div>
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
         <button class="review-nav-btn" id="reviewPrevMonth"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>上月</button>
         <span class="review-date-label clickable-month" data-current="${month}" style="cursor:pointer;">${year}年${m}月</span>
@@ -6092,6 +6137,16 @@ const UI = {
         const d = new Date(year, m, 1);
         this.openMonthReview(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
       };
+      // 绑定 Tab 切换
+      document.querySelectorAll('.review-tab').forEach(tab => {
+        tab.onclick = () => {
+          const t = tab.dataset.tab;
+          if (t === 'flow') this.openFlowAnalysis(month);
+          else if (t === 'week') this.openWeekReview();
+          else if (t === 'month') this.openMonthReview(month);
+          else if (t === 'year') this.openYearReview();
+        };
+      });
       // 渲染月复盘饼图
       if (stats.income > 0) {
         const incomeData = Object.entries(incomeByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
@@ -6194,7 +6249,7 @@ const UI = {
     const renderYearTop10 = (list, type) => {
       if (list.length === 0) return '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无记录</div>';
       return list.map((tx, i) => {
-        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '' };
+        const cat = Store.getCategory(tx.categoryId) || { icon: '', name: '' };
         const parentCat = Store.getCategory(tx.parentCategoryId) || { icon: '', name: '' };
         const acc = Store.getAccount(tx.accountId);
         // 分类名拼接：有二级时 "一级 - 二级"，只有一级时单独显示
@@ -6223,6 +6278,14 @@ const UI = {
     };
 
     Router.openSubpage('年度复盘', `
+      <div style="padding:8px 16px;">
+        <div style="display:flex;background:var(--bg-secondary);border-radius:20px;padding:3px;gap:2px;">
+          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">资金流向</div>
+          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">周复盘</div>
+          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">月复盘</div>
+          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;background:var(--primary);color:#fff;font-weight:600;">年复盘</div>
+        </div>
+      </div>
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
         <button class="review-nav-btn" id="yearReviewPrev"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>上年</button>
         <span class="review-date-label clickable-month" data-current="${y}" data-mode="year" style="cursor:pointer;">${y}年</span>
@@ -6273,6 +6336,16 @@ const UI = {
     setTimeout(() => {
       document.getElementById('yearReviewPrev').onclick = () => this.openYearReview(String(Number(year) - 1));
       document.getElementById('yearReviewNext').onclick = () => this.openYearReview(String(Number(year) + 1));
+      // 绑定 Tab 切换
+      document.querySelectorAll('.review-tab').forEach(tab => {
+        tab.onclick = () => {
+          const t = tab.dataset.tab;
+          if (t === 'flow') this.openFlowAnalysis();
+          else if (t === 'week') this.openWeekReview();
+          else if (t === 'month') this.openMonthReview();
+          else if (t === 'year') this.openYearReview(year);
+        };
+      });
       // 渲染年复盘饼图
       if (totalIncome > 0) {
         const incomeData = Object.entries(incomeByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
@@ -8939,6 +9012,11 @@ async function initApp() {
         calView.style.display = 'none';
         btn.textContent = '日历';
       }
+    };
+    // 分析按钮：跳转到月复盘，带上当前选中的月份和账本
+    document.getElementById('txAnalysisBtn').onclick = () => {
+      const curMonth = UI.filter.month || Util.monthKey(Util.today());
+      UI.openMonthReview(curMonth);
     };
     // 首页快捷分析入口
     document.querySelectorAll('#page-home .list-item').forEach((el, idx) => {
