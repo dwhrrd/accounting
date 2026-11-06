@@ -1018,9 +1018,9 @@ body.dark[data-style="handdrawn"] .type-switch {
   border-color: var(--primary-light);
 }
 [data-style="handdrawn"] #page-home .card:first-child .amount {
-  font-size: 18px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
 [data-style="handdrawn"] #page-home .card:first-child > div > div > div:first-child {
   font-size: 11px !important;
@@ -1941,18 +1941,18 @@ body.dark[data-style="handdrawn"] .type-switch {
       <div class="card">
         <div class="card-title">资产概览</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px;">
-          <div><div style="font-size:12px;color:var(--text-secondary)">总资产</div><div class="amount" style="font-size:18px;font-weight:600;margin-top:4px;" data-amount>¥0.00</div></div>
-          <div><div style="font-size:12px;color:var(--text-secondary)">净资产</div><div class="amount" style="font-size:18px;font-weight:600;margin-top:4px;" data-amount>¥0.00</div></div>
-          <div><div style="font-size:12px;color:var(--text-secondary)">总负债</div><div class="amount" style="font-size:18px;font-weight:600;margin-top:4px;color:var(--danger)" data-amount>¥0.00</div></div>
+          <div style="min-width:0;"><div style="font-size:12px;color:var(--text-secondary)">总资产</div><div class="amount" style="font-size:14px;font-weight:600;margin-top:4px;word-break:break-all;line-height:1.3;" data-amount>¥0.00</div></div>
+          <div style="min-width:0;"><div style="font-size:12px;color:var(--text-secondary)">净资产</div><div class="amount" style="font-size:14px;font-weight:600;margin-top:4px;word-break:break-all;line-height:1.3;" data-amount>¥0.00</div></div>
+          <div style="min-width:0;"><div style="font-size:12px;color:var(--text-secondary)">总负债</div><div class="amount" style="font-size:15px;font-weight:600;margin-top:4px;color:var(--danger);word-break:break-all;line-height:1.3;" data-amount>¥0.00</div></div>
         </div>
       </div>
       <div class="card">
         <div class="card-title">本月概览</div>
         <div id="statFilterHint" style="display:none;font-size:11px;color:var(--warning);margin-bottom:4px;text-align:center;"></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px;">
-          <div><div style="font-size:12px;color:var(--text-secondary)">收入</div><div class="amount income" style="font-size:18px;font-weight:600;margin-top:4px;color:var(--success)" data-amount>¥0.00</div></div>
-          <div><div style="font-size:12px;color:var(--text-secondary)">支出</div><div class="amount expense" style="font-size:18px;font-weight:600;margin-top:4px;color:var(--danger)" data-amount>¥0.00</div></div>
-          <div><div style="font-size:12px;color:var(--text-secondary)">结余</div><div class="amount" style="font-size:18px;font-weight:600;margin-top:4px;" data-amount>¥0.00</div></div>
+          <div style="min-width:0;"><div style="font-size:12px;color:var(--text-secondary)">收入</div><div class="amount income" style="font-size:15px;font-weight:600;margin-top:4px;color:var(--success);word-break:break-all;line-height:1.3;" data-amount>¥0.00</div></div>
+          <div style="min-width:0;"><div style="font-size:12px;color:var(--text-secondary)">支出</div><div class="amount expense" style="font-size:15px;font-weight:600;margin-top:4px;color:var(--danger);word-break:break-all;line-height:1.3;" data-amount>¥0.00</div></div>
+          <div style="min-width:0;"><div style="font-size:12px;color:var(--text-secondary)">结余</div><div class="amount" style="font-size:14px;font-weight:600;margin-top:4px;word-break:break-all;line-height:1.3;" data-amount>¥0.00</div></div>
         </div>
         <div style="margin-top:8px;font-size:13px;color:var(--text-secondary);text-align:center;">储蓄率：<span data-amount>0%</span></div>
       </div>
@@ -1983,7 +1983,7 @@ body.dark[data-style="handdrawn"] .type-switch {
       <div class="card">
         <div class="card-title">本月可支配收入</div>
         <div style="text-align:center;">
-          <div id="homeDisposable" style="font-size:24px;font-weight:700;" data-amount>¥0.00</div>
+          <div id="homeDisposable" style="font-size:22px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" data-amount>¥0.00</div>
           <div style="font-size:11px;color:var(--text-tertiary);margin-top:6px;line-height:1.5;">= 本月收入 − 本月支出 − 本月锁定的攒钱资金<br>与总资产/结余不同：已扣除标记为"不能动"的锁定金额</div>
         </div>
       </div>
@@ -2019,17 +2019,23 @@ body.dark[data-style="handdrawn"] .type-switch {
 
     <!-- 流水页 -->
     <section class="page" id="page-transactions">
-      <div id="txMonthSummary" style="margin:12px 16px 0;padding:10px 14px;background:var(--primary-bg);border-radius:var(--radius-sm);display:flex;justify-content:space-between;align-items:center;font-size:13px;">
-        <span style="color:var(--text-secondary);">本月</span>
-        <span style="display:flex;gap:16px;">
-          <span>支出 <strong id="txSummaryExpense" style="color:var(--danger);">¥0.00</strong></span>
-          <span>收入 <strong id="txSummaryIncome" style="color:var(--success);">¥0.00</strong></span>
-        </span>
-      </div>
-      <div style="padding:12px 16px;display:flex;gap:8px;">
-        <input class="form-input" id="txSearch" placeholder="搜索备注、分类、标签、账户..." style="flex:1;">
-        <button class="btn btn-outline" id="txFilterBtn" style="padding:10px 14px;">筛选</button>
-        <button class="btn btn-outline" id="txViewBtn" style="padding:10px 14px;">日历</button>
+      <!-- 吸顶区域：搜索栏 + 日期汇总栏 -->
+      <div style="position:sticky;top:0;z-index:50;background:var(--bg-page);padding-top:8px;">
+        <!-- 第一行：搜索 + 筛选 + 日历 -->
+        <div style="padding:0 16px 8px;display:flex;gap:8px;">
+          <input class="form-input" id="txSearch" placeholder="搜索备注、分类、标签、账户..." style="flex:1;">
+          <button class="btn btn-outline" id="txFilterBtn" style="padding:10px 14px;">筛选</button>
+          <button class="btn btn-outline" id="txViewBtn" style="padding:10px 14px;">日历</button>
+        </div>
+        <!-- 第二行：月份汇总 + 重置 -->
+        <div id="txMonthSummary" style="margin:0 16px 8px;padding:10px 14px;background:var(--primary-bg);border-radius:var(--radius-sm);display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+          <span id="txMonthLabel" style="color:var(--text-secondary);cursor:pointer;user-select:none;">2026年11月 <span style="font-size:10px;opacity:0.7;">▼</span></span>
+          <span style="display:flex;gap:12px;align-items:center;">
+            <span>支出 <strong id="txSummaryExpense" style="color:var(--danger);">¥0.00</strong></span>
+            <span>收入 <strong id="txSummaryIncome" style="color:var(--success);">¥0.00</strong></span>
+            <button id="txResetBtn" title="重置筛选" style="border:none;background:none;cursor:pointer;font-size:16px;color:var(--text-tertiary);padding:2px 4px;line-height:1;">↺</button>
+          </span>
+        </div>
       </div>
       <div id="txListView">
         <div class="empty-state">
@@ -2181,12 +2187,12 @@ body.dark[data-style="handdrawn"] .type-switch {
     </div>
     <div class="sheet-footer">
       <div id="quickActions" style="display:none;gap:8px;margin-bottom:8px;">
-        <button class="btn btn-outline" id="quickRefund" style="flex:1;color:var(--warning);border-color:var(--warning);">退款</button>
-        <button class="btn btn-outline" id="quickReimburse" style="flex:1;color:var(--success);border-color:var(--success);">标记已报销</button>
+        <button class="btn btn-outline" id="quickRefund" style="flex:1;color:var(--warning);border-color:var(--warning);height:48px;border-radius:var(--radius-sm);">退款</button>
+        <button class="btn btn-outline" id="quickReimburse" style="flex:1;color:var(--success);border-color:var(--success);height:48px;border-radius:var(--radius-sm);">标记已报销</button>
       </div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-outline" id="txDeleteBtn" style="display:none;color:var(--danger);border-color:var(--danger);">删除</button>
-        <button class="btn btn-primary btn-block" id="txSaveBtn">保存</button>
+        <button class="btn btn-outline" id="txDeleteBtn" style="display:none;flex:1;color:var(--danger);border-color:var(--danger);height:48px;border-radius:var(--radius-sm);">删除</button>
+        <button class="btn btn-primary" id="txSaveBtn" style="flex:1;height:48px;border-radius:var(--radius-sm);">保存</button>
       </div>
     </div>
   </div>
@@ -2734,6 +2740,14 @@ const DB = {
     return new Promise((resolve, reject) => {
       const req = this._tx(storeName).getAll();
       req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  count(storeName) {
+    return new Promise((resolve, reject) => {
+      const req = this._tx(storeName).count();
+      req.onsuccess = () => resolve(req.result || 0);
       req.onerror = () => reject(req.error);
     });
   },
@@ -3544,11 +3558,25 @@ const Store = {
       if (rules.keywords && rules.keywords.length) {
         match = rules.keywords.some(kw => (tx.note || '').includes(kw));
       }
-      if (!match && rules.categoryIds && rules.categoryIds.length) {
-        match = rules.categoryIds.includes(tx.categoryId) || rules.categoryIds.includes(tx.parentCategoryId);
-      }
-      if (!match && rules.subCategoryIds && rules.subCategoryIds.length) {
-        match = rules.subCategoryIds.includes(tx.categoryId);
+      // 分类匹配：严格精确原则
+      // 规则1：如果账本指定了二级分类（subCategoryIds 非空）→ 流水必须有二级，且二级在 subCategoryIds 里才匹配
+      //        无二级的流水即使一级在 categoryIds 里也不匹配
+      // 规则2：如果账本没有指定任何二级（subCategoryIds 为空）→ 流水的一级在 categoryIds 里就匹配
+      if (!match) {
+        const subRules = rules.subCategoryIds || [];
+        const catRules = rules.categoryIds || [];
+        if (subRules.length > 0) {
+          // 精确二级模式：必须匹配二级
+          if (tx.categoryId && subRules.includes(tx.categoryId)) {
+            match = true;
+          }
+          // 无二级的流水，即使一级在 catRules 里也不匹配
+        } else {
+          // 全选一级模式：只要一级匹配就可以
+          if (tx.parentCategoryId && catRules.includes(tx.parentCategoryId)) {
+            match = true;
+          }
+        }
       }
       if (!match && rules.tagNames && rules.tagNames.length) {
         match = (tx.tags || []).some(tag => rules.tagNames.includes(tag));
@@ -3809,7 +3837,7 @@ const Router = {
  * UI 层 —— 各页面渲染（阶段一占位，后续阶段填充）
  * ============================================================ */
 const UI = {
-  filter: { type: '', categoryId: '', accountId: '', tag: '', minAmount: '', maxAmount: '', startDate: '', endDate: '' },
+  filter: { type: '', categoryId: '', accountId: '', tag: '', minAmount: '', maxAmount: '', startDate: '', endDate: '', month: null },
 
   async renderHome() {
     // 阶段一：显示基础数据
@@ -3958,10 +3986,18 @@ const UI = {
   renderTransactions() {
     const list = document.getElementById('txListView');
     try {
-    // ===== 本月收支汇总条 =====
+    // ===== 月份收支汇总条 =====
     try {
       const now = new Date();
-      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const curMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const f = this.filter;
+      const monthKey = f.month || curMonthKey;
+      const [y, m] = monthKey.split('-').map(Number);
+      // 更新月份标签
+      const elMonthLabel = document.getElementById('txMonthLabel');
+      if (elMonthLabel) {
+        elMonthLabel.innerHTML = `${y}年${m}月 <span style="font-size:10px;opacity:0.7;">▼</span>`;
+      }
       const monthTxs = Store.state.transactions.filter(tx => {
         if (Store.state.currentLedgerId !== 'all' && !(tx.ledgerIds || []).includes(Store.state.currentLedgerId)) return false;
         return tx.date.startsWith(monthKey);
@@ -3982,6 +4018,15 @@ const UI = {
 
     const keyword = document.getElementById('txSearch').value;
     const f = this.filter;
+    // 月份过滤：如果选了月份，就限制 startDate/endDate 为该月
+    let startDate = f.startDate || undefined;
+    let endDate = f.endDate || undefined;
+    if (f.month) {
+      startDate = f.month + '-01';
+      const [my, mm] = f.month.split('-').map(Number);
+      const dim = new Date(my, mm, 0).getDate();
+      endDate = f.month + '-' + String(dim).padStart(2, '0');
+    }
     const txs = Store.filterTransactions({
       ledgerId: Store.state.currentLedgerId,
       keyword: keyword || undefined,
@@ -3991,8 +4036,8 @@ const UI = {
       tag: f.tag || undefined,
       minAmount: f.minAmount ? parseFloat(f.minAmount) : undefined,
       maxAmount: f.maxAmount ? parseFloat(f.maxAmount) : undefined,
-      startDate: f.startDate || undefined,
-      endDate: f.endDate || undefined
+      startDate: startDate,
+      endDate: endDate
     });
     if (txs.length === 0) {
       const total = Store.state.transactions.length;
@@ -4003,36 +4048,34 @@ const UI = {
         '</div></div>';
       return;
     }
-    // 按日期分组
-    const groups = {};
-    txs.forEach(tx => {
-      if (!groups[tx.date]) groups[tx.date] = [];
-      groups[tx.date].push(tx);
-    });
+    // 按日期倒序排列，不做分组
+    const sortedTxs = txs.slice().sort((a, b) => b.date.localeCompare(a.date));
     let html = '';
     let itemIdx = 0;
-    Object.keys(groups).sort().reverse().forEach(date => {
-      const dayTxs = groups[date];
-      let dayIncome = 0, dayExpense = 0;
-      dayTxs.forEach(tx => {
-        if (tx.type === 'income') dayIncome += Number(tx.amount);
-        if (tx.type === 'expense') dayExpense += Number(tx.amount);
-        if (tx.type === 'transfer' && tx.fee) dayExpense += Number(tx.fee);
-      });
-      html += `<div style="padding:8px 16px;font-size:13px;color:var(--text-secondary);display:flex;justify-content:space-between;background:var(--bg-page);">
-        <span>${date}</span>
-        <span>收 <span data-amount>${Util.fmtMoney(dayIncome)}</span> 支 <span data-amount>${Util.fmtMoney(dayExpense)}</span></span>
-      </div>`;
-      dayTxs.forEach(tx => {
-        const cat = Store.getCategory(tx.categoryId);
+    sortedTxs.forEach(tx => {
+        const cat = Store.getCategory(tx.categoryId); // 二级分类
+        const parentCat = Store.getCategory(tx.parentCategoryId); // 一级分类
         const acc = Store.getAccount(tx.accountId);
         const toAcc = tx.toAccountId ? Store.getAccount(tx.toAccountId) : null;
         let amountText = '';
         let amountClass = '';
-        let typeIcon = cat ? cat.icon : '📦';
+        // 图标：优先二级分类，没有则用一级分类，再没有用默认
+        let typeIcon = cat ? cat.icon : (parentCat ? parentCat.icon : '📦');
         const typeMap = { expense: '支出', income: '收入', transfer: '转账', refund: '退款', receivable: '应收', payable: '应付', reimburse_income: '报销到账' };
-        let typeName = cat ? cat.name : (typeMap[tx.type] || tx.type);
-        let subInfo = acc ? acc.name : '';
+        // 分类名：有二级时拼接"一级 · 二级"，只有一级时单独显示一级
+        let typeName;
+        if (cat && parentCat) {
+          typeName = parentCat.name + ' · ' + cat.name;
+        } else if (cat) {
+          typeName = cat.name;
+        } else if (parentCat) {
+          typeName = parentCat.name;
+        } else {
+          typeName = typeMap[tx.type] || tx.type;
+        }
+        // 副标题：日期(MM-DD) · 账户 · 备注
+        const shortDate = tx.date.substring(5); // MM-DD
+        let subInfo = shortDate + (acc ? ' · ' + acc.name : '');
         if (tx.type === 'income') { amountText = '+' + Util.fmtMoneyPlain(tx.amount); amountClass = 'income'; }
         else if (tx.type === 'expense') {
           amountText = '-' + Util.fmtMoneyPlain(tx.amount); amountClass = 'expense';
@@ -4085,14 +4128,13 @@ const UI = {
           <div class="list-item swipe-content" data-tx-id="${tx.id}">
             <div class="icon-wrap" style="background:var(--primary-bg);font-size:18px;">${typeIcon}</div>
             <div class="item-main">
-              <div class="item-title">${typeName} ${reimburseTag}</div>
+            <div class="item-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${typeName} ${reimburseTag}</div>
               <div class="item-sub">${subInfo} ${tags}</div>
             </div>
             <div class="item-value ${amountClass}" data-amount>${amountText}</div>
           </div>
         </div>`;
         itemIdx++;
-      });
     });
     list.innerHTML = html;
     // 绑定点击和左滑
@@ -4790,8 +4832,10 @@ const UI = {
               <input type="checkbox" class="ledger-cat1" value="${c.id}" ${(rules.categoryIds || []).includes(c.id) ? 'checked' : ''}> ${c.icon} ${c.name}
             </label>`).join('')}
           </div></div>
-          <div id="ledgerSubCatWrap" style="margin-bottom:10px;display:none;"><span style="font-size:13px;color:var(--text-secondary);">包含以下二级分类：</span>
-          <div id="ledgerSubCatSelect" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div></div>
+          <div id="ledgerSubCatWrap" style="margin-bottom:10px;"><span style="font-size:13px;color:var(--text-secondary);">包含以下二级分类（可选）：</span>
+          <div id="ledgerSubCatSelect" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+            <span id="ledgerSubCatEmpty" style="font-size:12px;color:var(--text-tertiary);">勾选上方一级分类后，可进一步选择二级分类</span>
+          </div></div>
           <div><span style="font-size:13px;color:var(--text-secondary);">包含以下标签：</span>
           <div id="ledgerTagSelect" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
             ${tags.length === 0 ? '<span style="font-size:12px;color:var(--text-tertiary);">暂无标签，可在"我的-标签管理"添加</span>' : tags.map(t => `<label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:4px 8px;background:var(--bg-card);border-radius:6px;cursor:pointer;">
@@ -4812,14 +4856,19 @@ const UI = {
       // 一级分类变化时更新二级分类
       const updateSubCats = () => {
         const selectedCats = Array.from(document.querySelectorAll('.ledger-cat1:checked')).map(cb => cb.value);
-        const wrap = document.getElementById('ledgerSubCatWrap');
         const container = document.getElementById('ledgerSubCatSelect');
-        if (selectedCats.length === 0) { wrap.style.display = 'none'; return; }
-        wrap.style.display = 'block';
+        if (selectedCats.length === 0) {
+          container.innerHTML = '<span style="font-size:12px;color:var(--text-tertiary);">勾选上方一级分类后，可进一步选择二级分类</span>';
+          return;
+        }
         let subCats = [];
         selectedCats.forEach(pid => {
           subCats = subCats.concat(Store.state.categories.filter(c => c.parentId === pid));
         });
+        if (subCats.length === 0) {
+          container.innerHTML = '<span style="font-size:12px;color:var(--text-tertiary);">所选一级分类暂无二级分类</span>';
+          return;
+        }
         container.innerHTML = subCats.map(c => `<label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:4px 8px;background:var(--bg-card);border-radius:6px;cursor:pointer;">
           <input type="checkbox" class="ledger-cat2" value="${c.id}" ${(rules.subCategoryIds || []).includes(c.id) ? 'checked' : ''}> ${c.name}
         </label>`).join('');
@@ -4842,6 +4891,11 @@ const UI = {
         const data = { id: ledger ? ledger.id : Util.uid(), name, icon, rules: { keywords, categoryIds, subCategoryIds, tagNames }, createdAt: ledger ? ledger.createdAt : Util.nowTime() };
         if (isEdit) { await DB.put('ledgers', data); const idx = Store.state.ledgers.findIndex(l => l.id === ledger.id); Store.state.ledgers[idx] = data; }
         else { await DB.add('ledgers', data); Store.state.ledgers.push(data); }
+        // 规则变更后，重新计算所有流水的 ledgerIds（历史流水也需要自动归入新规则的账本）
+        Store.state.transactions.forEach(tx => {
+          tx.ledgerIds = Store.matchLedgers(tx);
+          DB.put('transactions', tx); // 异步更新数据库
+        });
         if (budgetAmount > 0) {
           const budget = { id: Util.uid(), ledgerId: data.id, month: Util.monthKey(Util.today()), amount: budgetAmount };
           const existing = Store.state.budgets.find(b => b.ledgerId === data.id && b.month === budget.month);
@@ -4949,7 +5003,9 @@ const UI = {
     }
     function getSelectedVal(col) {
       if (!col) return null;
-      const idx = Math.round((col.scrollTop + ITEM_H / 2) / ITEM_H);
+      // wheel-col 有 padding: 66px 0，第一个 item 在 scrollTop=0 时已对准高亮框
+      // 直接用 scrollTop / ITEM_H 计算索引即可，不要再加半个 ITEM_H 的偏移
+      const idx = Math.round(col.scrollTop / ITEM_H);
       const items = col.querySelectorAll('.wheel-item');
       return items[idx] ? parseInt(items[idx].dataset.val) : null;
     }
@@ -5399,25 +5455,113 @@ const UI = {
               e.stopPropagation();
               const tag = Store.state.tags.find(t => t.id === btn.dataset.editTag);
               if (!tag) return;
-              const newName = prompt('编辑标签名称（留空不改）', tag.name);
-              if (newName === null) return;
-              if (newName.trim()) {
-                const trimmed = newName.trim();
-                const oldName = tag.name;
-                tag.name = trimmed;
-                Store.state.transactions.forEach(tx => {
-                  if (tx.tags) tx.tags = tx.tags.map(n => n === oldName ? trimmed : n);
+              // 36 种预设色板：莫兰迪 + 马卡龙 + 基础 + 深色
+              const allColors = [
+                // 莫兰迪低饱和色系
+                '#b0a8b9', '#c9b1a9', '#a8b8a0', '#9fb3c8', '#d4b5b5', '#c2c9b8',
+                // 马卡龙高明度色系
+                '#f8c8d8', '#fce4b6', '#c8e6c9', '#b3e5fc', '#e1bee7', '#fff9c4',
+                // 基础亮色系
+                '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6',
+                // 紫粉系
+                '#8b5cf6', '#ec4899', '#a855f7', '#d946ef', '#f472b6', '#c084fc',
+                // 深色调
+                '#78350f', '#7f1d1d', '#14532d', '#1e3a8a', '#4c1d95', '#831843',
+                // 灰棕系
+                '#6b7280', '#9ca3af', '#57534e', '#78716c', '#44403c', '#292524'
+              ];
+              // 弹出编辑面板
+              const overlay = document.createElement('div');
+              overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:flex-end;';
+              overlay.innerHTML = `
+                <div style="background:var(--bg-card);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:500px;margin:0 auto;">
+                  <div style="font-size:16px;font-weight:600;margin-bottom:16px;">编辑标签</div>
+                  <div style="margin-bottom:16px;">
+                    <label style="font-size:13px;color:var(--text-secondary);display:block;margin-bottom:6px;">标签名称</label>
+                    <input id="editTagName" type="text" value="${tag.name}" style="width:100%;padding:10px 12px;border:1px solid var(--border-light);border-radius:8px;font-size:14px;box-sizing:border-box;">
+                  </div>
+                  <div style="margin-bottom:20px;">
+                    <label style="font-size:13px;color:var(--text-secondary);display:block;margin-bottom:10px;">标签颜色</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;" id="tagColorGrid">
+                      ${allColors.map(c => `
+                        <div data-color="${c}" style="width:32px;height:32px;border-radius:50%;background:${c};cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;${tag.color === c ? 'box-shadow:0 0 0 2px var(--bg-card),0 0 0 4px ' + c + ';' : ''}">
+                          ${tag.color === c ? '✓' : ''}
+                        </div>
+                      `).join('')}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <div style="position:relative;width:32px;height:32px;">
+                        <div id="customColorBtn" style="width:32px;height:32px;border-radius:50%;border:2px dashed var(--border-light);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-tertiary);background:var(--bg-page);">+</div>
+                        <input type="color" id="customColorInput" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;padding:0;border:none;">
+                      </div>
+                      <span style="font-size:12px;color:var(--text-tertiary);">自定义颜色</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:10px;">
+                    <button id="tagEditCancel" style="flex:1;padding:12px;border:1px solid var(--border-light);border-radius:10px;background:var(--bg-card);font-size:15px;cursor:pointer;">取消</button>
+                    <button id="tagEditSave" style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;cursor:pointer;">保存</button>
+                  </div>
+                </div>
+              `;
+              document.body.appendChild(overlay);
+              let selectedColor = tag.color || '#6b7280';
+              // 绑定颜色选择
+              overlay.querySelectorAll('#tagColorGrid [data-color]').forEach(el => {
+                el.onclick = () => {
+                  selectedColor = el.dataset.color;
+                  overlay.querySelectorAll('#tagColorGrid [data-color]').forEach(e => {
+                    e.style.boxShadow = '';
+                    e.textContent = '';
+                  });
+                  el.style.boxShadow = `0 0 0 3px var(--bg-card),0 0 0 5px ${selectedColor}`;
+                  el.textContent = '✓';
+                };
+              });
+              // 自定义颜色：input 直接覆盖在按钮上，用户点击即触发原生取色器
+              const customInput = overlay.querySelector('#customColorInput');
+              customInput.value = selectedColor;
+              // 如果当前标签用的就是自定义色，初始化按钮预览
+              if (!allColors.includes(selectedColor)) {
+                const customBtn = overlay.querySelector('#customColorBtn');
+                customBtn.style.background = selectedColor;
+                customBtn.style.border = 'none';
+                customBtn.style.color = '#fff';
+                customBtn.textContent = '✓';
+              }
+              customInput.oninput = () => {
+                selectedColor = customInput.value;
+                // 更新自定义按钮的预览色
+                const customBtn = overlay.querySelector('#customColorBtn');
+                customBtn.style.background = selectedColor;
+                customBtn.style.border = 'none';
+                customBtn.style.color = '#fff';
+                customBtn.textContent = '✓';
+                // 清除预设色板的选中状态
+                overlay.querySelectorAll('#tagColorGrid [data-color]').forEach(e => {
+                  e.style.boxShadow = '';
+                  e.textContent = '';
                 });
-                await DB.bulkPut('transactions', Store.state.transactions);
-              }
-              // 颜色选择
-              const colors = ['#6b7280','#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#06b6d4'];
-              const colorChoice = prompt('标签颜色（输入编号1-8）：\n1.灰 2.红 3.橙 4.绿 5.蓝 6.紫 7.粉 8.青', colors.indexOf(tag.color || '#6b7280') + 1);
-              if (colorChoice && colors[parseInt(colorChoice) - 1]) {
-                tag.color = colors[parseInt(colorChoice) - 1];
-              }
-              await DB.put('tags', tag);
-              render();
+              };
+              // 取消
+              overlay.querySelector('#tagEditCancel').onclick = () => overlay.remove();
+              overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+              // 保存
+              overlay.querySelector('#tagEditSave').onclick = async () => {
+                const newName = overlay.querySelector('#editTagName').value.trim();
+                if (!newName) { Util.toast('标签名不能为空'); return; }
+                if (newName !== tag.name) {
+                  const oldName = tag.name;
+                  tag.name = newName;
+                  Store.state.transactions.forEach(tx => {
+                    if (tx.tags) tx.tags = tx.tags.map(n => n === oldName ? newName : n);
+                  });
+                  await DB.bulkPut('transactions', Store.state.transactions);
+                }
+                tag.color = selectedColor;
+                await DB.put('tags', tag);
+                overlay.remove();
+                render();
+              };
             };
           });
           document.querySelectorAll('[data-del-tag]').forEach(btn => {
@@ -5541,8 +5685,11 @@ const UI = {
   openFlowAnalysis(month=null) {
     if (!month) month = Util.monthKey(Util.today());
     const [y, m] = month.split('-').map(Number);
-    const prevMonth = `${y}-${String(m - 1).padStart(2, '0')}`;
-    const nextMonth = `${y}-${String(m + 1).padStart(2, '0')}`;
+    // 用原生 Date 自动处理跨年：m=12 下月自动变下一年1月，m=1 上月自动变上一年12月
+    const prevD = new Date(y, m - 2, 1);
+    const nextD = new Date(y, m, 1);
+    const prevMonth = `${prevD.getFullYear()}-${String(prevD.getMonth() + 1).padStart(2, '0')}`;
+    const nextMonth = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, '0')}`;
     const monthLabel = `${y}年${m}月`;
     const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: month + '-01', endDate: month + '-31', excludeStats: true });
     // 按一级分类聚合
@@ -5720,16 +5867,28 @@ const UI = {
     const renderWeekTop10 = (list, type) => {
       if (list.length === 0) return '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无记录</div>';
       return list.map((tx, i) => {
-        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '其他' };
+        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '' };
+        const parentCat = Store.getCategory(tx.parentCategoryId) || { icon: '', name: '' };
+        const acc = Store.getAccount(tx.accountId);
+        // 分类名拼接：有二级时 "一级 - 二级"，只有一级时单独显示
+        let catName = '';
+        if (cat.name && parentCat.name) catName = parentCat.name + ' - ' + cat.name;
+        else if (cat.name) catName = cat.name;
+        else if (parentCat.name) catName = parentCat.name;
+        else catName = '其他';
         const shortDate = tx.date.substring(5);
         const amountCls = type === 'expense' ? 'var(--danger)' : 'var(--success)';
         const sign = type === 'expense' ? '-' : '+';
+        // 副标题：日期 · 账户名 · 备注
+        const subParts = [shortDate];
+        if (acc) subParts.push(acc.name);
+        if (tx.note) subParts.push(tx.note);
         return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
           <span style="width:20px;text-align:center;color:var(--text-tertiary);font-weight:600;">${i + 1}</span>
-          <span style="font-size:16px;">${cat.icon || '📦'}</span>
+          <span style="font-size:16px;">${cat.icon || parentCat.icon || '📦'}</span>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${cat.name || '其他'}</div>
-            <div style="font-size:11px;color:var(--text-tertiary);">${shortDate}${tx.note ? ' · ' + tx.note : ''}</div>
+            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${catName}</div>
+            <div style="font-size:11px;color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${subParts.join(' · ')}</div>
           </div>
           <span style="color:${amountCls};font-weight:600;" data-amount>${sign}${Util.fmtMoneyPlain(tx.amount)}</span>
         </div>`;
@@ -5835,16 +5994,28 @@ const UI = {
     const renderTop10 = (list, type) => {
       if (list.length === 0) return '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无记录</div>';
       return list.map((tx, i) => {
-        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '其他' };
+        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '' };
+        const parentCat = Store.getCategory(tx.parentCategoryId) || { icon: '', name: '' };
+        const acc = Store.getAccount(tx.accountId);
+        // 分类名拼接：有二级时 "一级 - 二级"，只有一级时单独显示
+        let catName = '';
+        if (cat.name && parentCat.name) catName = parentCat.name + ' - ' + cat.name;
+        else if (cat.name) catName = cat.name;
+        else if (parentCat.name) catName = parentCat.name;
+        else catName = '其他';
         const shortDate = tx.date.substring(5); // 只显示 MM-DD
         const amountCls = type === 'expense' ? 'var(--danger)' : 'var(--success)';
         const sign = type === 'expense' ? '-' : '+';
+        // 副标题：日期 · 账户名 · 备注
+        const subParts = [shortDate];
+        if (acc) subParts.push(acc.name);
+        if (tx.note) subParts.push(tx.note);
         return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
           <span style="width:20px;text-align:center;color:var(--text-tertiary);font-weight:600;">${i + 1}</span>
-          <span style="font-size:16px;">${cat.icon || '📦'}</span>
+          <span style="font-size:16px;">${cat.icon || parentCat.icon || '📦'}</span>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${cat.name || '其他'}</div>
-            <div style="font-size:11px;color:var(--text-tertiary);">${shortDate}${tx.note ? ' · ' + tx.note : ''}</div>
+            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${catName}</div>
+            <div style="font-size:11px;color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${subParts.join(' · ')}</div>
           </div>
           <span style="color:${amountCls};font-weight:600;" data-amount>${sign}${Util.fmtMoneyPlain(tx.amount)}</span>
         </div>`;
@@ -6023,16 +6194,28 @@ const UI = {
     const renderYearTop10 = (list, type) => {
       if (list.length === 0) return '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无记录</div>';
       return list.map((tx, i) => {
-        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '其他' };
+        const cat = Store.getCategory(tx.categoryId) || { icon: '📦', name: '' };
+        const parentCat = Store.getCategory(tx.parentCategoryId) || { icon: '', name: '' };
+        const acc = Store.getAccount(tx.accountId);
+        // 分类名拼接：有二级时 "一级 - 二级"，只有一级时单独显示
+        let catName = '';
+        if (cat.name && parentCat.name) catName = parentCat.name + ' - ' + cat.name;
+        else if (cat.name) catName = cat.name;
+        else if (parentCat.name) catName = parentCat.name;
+        else catName = '其他';
         const shortDate = tx.date.substring(5);
         const amountCls = type === 'expense' ? 'var(--danger)' : 'var(--success)';
         const sign = type === 'expense' ? '-' : '+';
+        // 副标题：日期 · 账户名 · 备注
+        const subParts = [shortDate];
+        if (acc) subParts.push(acc.name);
+        if (tx.note) subParts.push(tx.note);
         return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
           <span style="width:20px;text-align:center;color:var(--text-tertiary);font-weight:600;">${i + 1}</span>
-          <span style="font-size:16px;">${cat.icon || '📦'}</span>
+          <span style="font-size:16px;">${cat.icon || parentCat.icon || '📦'}</span>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${cat.name || '其他'}</div>
-            <div style="font-size:11px;color:var(--text-tertiary);">${shortDate}${tx.note ? ' · ' + tx.note : ''}</div>
+            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${catName}</div>
+            <div style="font-size:11px;color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${subParts.join(' · ')}</div>
           </div>
           <span style="color:${amountCls};font-weight:600;" data-amount>${sign}${Util.fmtMoneyPlain(tx.amount)}</span>
         </div>`;
@@ -7065,17 +7248,24 @@ const UI = {
       } catch(e) {}
 
       if (r.ok) {
+        // 清理 URL 中的 quickadd hash，避免下次切回时重复处理
+        try { history.replaceState(null, '', window.location.origin + window.location.pathname + window.location.search); } catch(e) {}
+        // 非调试模式：立即跳回主页，不替换 body、不依赖 setTimeout（防止 iOS 后台挂起定时器导致卡住）
+        if (!isDebug) {
+          console.log('[QuickAdd] 写入成功，立即跳转回主页');
+          try {
+            window.location.replace(window.location.origin + window.location.pathname + window.location.search);
+          } catch(e) {}
+          // 兜底：如果 replace 被阻塞，用 href 再试一次
+          try {
+            window.location.href = window.location.origin + window.location.pathname + window.location.search;
+          } catch(e) {}
+          return; // 不继续渲染诊断页面，保留原 DOM
+        }
+        // 调试模式下才执行渲染和显示诊断信息
         try { UI.renderHome(); } catch (e) { dbg('renderHome失败: ' + e.message); }
         try { UI.renderTransactions(); } catch (e) { dbg('renderTransactions失败: ' + e.message); }
         try { UI.renderAssets(); } catch (e) { dbg('renderAssets失败: ' + e.message); }
-        // 清理 URL 中的 quickadd hash，避免下次切回时重复处理
-        try { history.replaceState(null, '', window.location.origin + window.location.pathname + window.location.search); } catch(e) {}
-        // 非调试模式下，写入成功后自动跳回主页，避免停留在新标签页
-        if (!isDebug) {
-          setTimeout(() => {
-            try { window.location.replace(window.location.origin + window.location.pathname + window.location.search); } catch(e) {}
-          }, 500);
-        }
       }
 
       // 始终显示完整诊断信息
@@ -8008,8 +8198,8 @@ const UI = {
           <div style="flex:1;"><label class="form-label">结束日期</label><input class="form-input filter-date-input wheel-date-input" id="fEnd" type="text" readonly value="${f.endDate}"></div>
         </div>
         <div style="display:flex;gap:8px;margin-top:20px;">
-          <button class="btn btn-outline btn-block" id="fReset">重置</button>
-          <button class="btn btn-primary btn-block" id="fApply">应用筛选</button>
+          <button class="btn btn-outline" id="fReset" style="flex:1;height:44px;border-radius:var(--radius-sm);padding:0;box-shadow:none;">重置</button>
+          <button class="btn btn-primary" id="fApply" style="flex:1;height:44px;border-radius:var(--radius-sm);padding:0;box-shadow:none;">应用筛选</button>
         </div>
       </div>
     `);
@@ -8720,6 +8910,20 @@ async function initApp() {
     }, 300));
     // 筛选按钮
     document.getElementById('txFilterBtn').onclick = () => UI.openFilter();
+    // 月份标签点击：唤起滚轮月份选择器
+    document.getElementById('txMonthLabel').onclick = () => {
+      const curMonth = UI.filter.month || Util.monthKey(Util.today());
+      UI.openWheelDatePicker(curMonth, (val) => {
+        UI.filter.month = val;
+        UI.renderTransactions();
+      }, { mode: 'month' });
+    };
+    // 重置按钮：清空搜索 + 清空筛选 + 回到本月
+    document.getElementById('txResetBtn').onclick = () => {
+      document.getElementById('txSearch').value = '';
+      UI.filter = { type: '', categoryId: '', accountId: '', tag: '', minAmount: '', maxAmount: '', startDate: '', endDate: '', month: null };
+      UI.renderTransactions();
+    };
     // 视图切换（列表/日历）
     document.getElementById('txViewBtn').onclick = () => {
       const listView = document.getElementById('txListView');
@@ -8798,9 +9002,8 @@ if (typeof window !== 'undefined') {
 
   // 全局刷新函数：保留滚动位置，重新加载数据并渲染
   let _refreshTimer = null;
-  window.globalRefresh = async () => {
-    if (_refreshTimer) return; // 防抖，2秒内只刷新一次
-    _refreshTimer = setTimeout(() => { _refreshTimer = null; }, 2000);
+  let _refreshPending = false;
+  const _doRefresh = async () => {
     const scrollY = window.scrollY; // 记录滚动位置
     try {
       await Store.loadAll();
@@ -8810,26 +9013,60 @@ if (typeof window !== 'undefined') {
       UI.renderAssets();
       // 恢复滚动位置
       requestAnimationFrame(() => window.scrollTo(0, scrollY));
-      console.log('[Refresh] 前台数据已自动刷新');
+      // 同步更新轮询基线，避免状态不一致
+      if (typeof _lastTxCount !== 'undefined') {
+        _lastTxCount = Store.state.transactions.length;
+      }
+      console.log('[Refresh] 前台数据已自动刷新，共', Store.state.transactions.length, '笔');
     } catch (e) { console.warn('前台刷新数据失败:', e); }
   };
+  // 普通刷新（带防抖）
+  window.globalRefresh = async () => {
+    if (_refreshTimer) {
+      _refreshPending = true;
+      console.log('[Refresh] 防抖期间收到新请求，已标记待刷新');
+      return;
+    }
+    _refreshTimer = setTimeout(() => {
+      _refreshTimer = null;
+      if (_refreshPending) {
+        _refreshPending = false;
+        console.log('[Refresh] 执行 pending 刷新');
+        window.globalRefresh();
+      }
+    }, 800);
+    await _doRefresh();
+  };
+  // 强制刷新（绕过防抖，页面恢复时使用）
+  window.forceRefresh = async () => {
+    console.log('[Refresh] 强制刷新，绕过防抖');
+    await _doRefresh();
+  };
 
-  // 轮询检测：每 3 秒检查一次流水总数，发现变化自动刷新
+  // 轮询检测：轻量 count 查询，前台 3 秒 / 后台 5 秒，发现变化自动刷新
   let _lastTxCount = 0;
+  let _pollTimer = null;
   window._updateLastTxCount = (count) => { _lastTxCount = count; };
-  setInterval(async () => {
-    if (document.hidden) return; // 后台不检测，省电
+
+  const _checkTxChange = async () => {
     try {
-      const txs = await DB.getAll('transactions');
-      const count = txs.length;
-      if (_lastTxCount === 0) { _lastTxCount = count; return; } // 首次初始化
+      const count = await DB.count('transactions');
+      if (_lastTxCount === 0) { _lastTxCount = count; return; }
       if (count !== _lastTxCount) {
         console.log('[Polling] 检测到流水数量变化:', _lastTxCount, '→', count);
         _lastTxCount = count;
         window.globalRefresh();
       }
     } catch(e) { /* 忽略错误 */ }
-  }, 3000);
+  };
+
+  const _startPolling = (interval) => {
+    if (_pollTimer) clearInterval(_pollTimer);
+    _pollTimer = setInterval(_checkTxChange, interval);
+  };
+
+  // 启动前台轮询（3 秒）
+  _startPolling(3000);
 
   // BroadcastChannel 跨标签页通信：一个标签页写入数据，其他标签页自动刷新
   try {
@@ -8845,26 +9082,51 @@ if (typeof window !== 'undefined') {
     console.warn('BroadcastChannel 不支持，仅使用轮询');
   }
 
-  // 页面从后台切回前台时，重新加载数据并渲染（解决快捷指令在新标签页记账后原标签页看不到的问题）
+  // 页面从后台切回前台：强制立即刷新 + 多次延迟确认，覆盖 iOS 挂起时序问题
   if (document.addEventListener) {
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState === 'visible') {
-        console.log('[Lifecycle] visibilitychange: 页面可见');
-        window.globalRefresh();
+        console.log('[Lifecycle] visibilitychange: 页面可见，强制刷新');
+        _startPolling(3000);
+        // 立即强制刷新
+        window.forceRefresh();
+        // 多次延迟确认，覆盖 iOS 事件延迟和数据写入时序
+        setTimeout(() => { _checkTxChange(); }, 300);
+        setTimeout(() => { window.forceRefresh(); }, 1000);
+        setTimeout(() => { _checkTxChange(); }, 2000);
+      } else {
+        _startPolling(5000);
       }
     });
   }
-  // focus 事件兜底：切换标签页回来时触发
+
+  // focus 事件兜底：切换标签页回来时强制刷新
   window.addEventListener('focus', () => {
     if (!document.hidden) {
-      console.log('[Lifecycle] focus: 窗口获得焦点');
-      window.globalRefresh();
+      console.log('[Lifecycle] focus: 窗口获得焦点，强制刷新');
+      window.forceRefresh();
     }
   });
-  // pageshow 事件兜底：bfcache 恢复时触发（iOS 常用）
+
+  // pageshow 事件：bfcache 恢复或正常显示都强制刷新（iOS 关键事件）
   window.addEventListener('pageshow', (e) => {
-    console.log('[Lifecycle] pageshow: 页面显示');
-    window.globalRefresh();
+    console.log('[Lifecycle] pageshow: 页面显示，persisted =', e.persisted, '，强制刷新');
+    _startPolling(3000);
+    // 立即强制刷新
+    window.forceRefresh();
+    // 延迟二次确认
+    setTimeout(() => { window.forceRefresh(); }, 500);
+    setTimeout(() => { _checkTxChange(); }, 1500);
+  });
+
+  // 页面卸载时清理定时器，防止内存泄漏
+  window.addEventListener('pagehide', () => {
+    if (_pollTimer) clearInterval(_pollTimer);
+    _pollTimer = null;
+  });
+  window.addEventListener('beforeunload', () => {
+    if (_pollTimer) clearInterval(_pollTimer);
+    _pollTimer = null;
   });
 }
 // 导出供测试
