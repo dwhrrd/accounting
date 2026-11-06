@@ -2354,14 +2354,19 @@ const Util = {
   LieflatChart: {
     // 从 CSS 变量读取主题色，构建莫兰迪暖色系色板
     getColors() {
-      const cs = getComputedStyle(document.documentElement);
-      const primary = cs.getPropertyValue('--primary').trim() || '#d4956b';
-      const success = cs.getPropertyValue('--success').trim() || '#7ba05b';
-      const danger = cs.getPropertyValue('--danger').trim() || '#c97b63';
-      const warning = cs.getPropertyValue('--warning').trim() || '#d4a056';
-      const accentBlue = cs.getPropertyValue('--accent-blue').trim() || '#7fb5b5';
-      const tertiary = cs.getPropertyValue('--text-tertiary').trim() || '#b0a394';
-      return [primary, success, accentBlue, danger, warning, tertiary];
+      // 高对比度色弱友好色板（Tableau 10 改良版）
+      return [
+        '#4E79A7', // 蓝
+        '#F28E2B', // 橙
+        '#E15759', // 红
+        '#76B7B2', // 青
+        '#59A14F', // 绿
+        '#EDC948', // 黄
+        '#B07AA1', // 紫
+        '#FF9DA7', // 粉
+        '#9C755F', // 棕
+        '#BAB0AC', // 灰
+      ];
     },
 
     // 环形图渲染：container 为 DOM 元素，data = [{name, value}]
@@ -2433,18 +2438,18 @@ const Util = {
       `;
 
       container.innerHTML = `
-        <div class="lieflat-chart-wrap" data-lieflat="donut" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;padding:8px 4px;">
-          <div style="position:relative;flex-shrink:0;width:120px;">
+        <div class="lieflat-chart-wrap" data-lieflat="donut" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;padding:8px 4px;">
+          <div style="position:relative;flex-shrink:0;width:100px;">
             <svg viewBox="0 0 ${size} ${size}" style="width:100%;height:auto;">
               ${svgContent}
               ${centerText}
             </svg>
           </div>
-          <div class="lieflat-legend" style="flex:1;min-width:140px;">
+          <div class="lieflat-legend" style="flex:1;min-width:120px;">
             ${paths.map((p, i) => `
-              <div class="lieflat-legend-item" data-index="${p.index}" data-name="${p.name}" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer;">
-                <span style="width:10px;height:10px;border-radius:2px;background:${p.color};flex-shrink:0;"></span>
-                <span style="flex:1;color:var(--text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
+              <div class="lieflat-legend-item" data-index="${p.index}" data-name="${p.name}" style="display:flex;align-items:flex-start;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer;">
+                <span style="width:10px;height:10px;border-radius:2px;background:${p.color};flex-shrink:0;margin-top:2px;"></span>
+                <span style="flex:1;color:var(--text-primary);min-width:0;word-break:break-all;">${p.name}</span>
                 <span style="color:var(--text-secondary);flex-shrink:0;">${Util.fmtMoneyPlain(p.value)} (${p.pct}%)</span>
               </div>
             `).join('')}
@@ -2540,7 +2545,7 @@ const Util = {
       // 找最大值
       let maxVal = 1;
       data.forEach(d => series.forEach(s => { maxVal = Math.max(maxVal, d[s.key] || 0); }));
-      const chartH = 140;
+      const chartH = 120; // 统一图表区域高度
       const barGap = 2;
       const groupGap = 8;
 
@@ -2548,15 +2553,15 @@ const Util = {
       const groupsHtml = data.map((d, i) => {
         const barsHtml = series.map((s, si) => {
           const val = d[s.key] || 0;
-          const h = val / maxVal * (chartH - 20);
+          const h = val / maxVal * (chartH - 10);
           const color = colors[si % colors.length];
           return `<div class="lieflat-bar" data-index="${i}" data-series="${si}" data-value="${val}" data-name="${s.name}" style="flex:1;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;">
             <div style="width:100%;max-width:14px;height:${h}px;min-height:${val > 0 ? '3px' : '0'};background:${color};border-radius:3px 3px 0 0;transition:opacity 0.2s;"></div>
           </div>`;
         }).join('');
-        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:20px;">
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;min-width:20px;">
           <div style="width:100%;display:flex;gap:${barGap}px;align-items:flex-end;height:${chartH}px;padding:0 2px;">${barsHtml}</div>
-          <span style="font-size:9px;color:var(--text-tertiary);">${d.month}</span>
+          <div style="height:20px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-tertiary);margin-top:4px;">${d.month}</div>
         </div>`;
       }).join('');
 
@@ -2569,9 +2574,11 @@ const Util = {
       }).join('');
 
       container.innerHTML = `
-        <div class="lieflat-chart-wrap" data-lieflat="bar" style="padding:8px 4px;">
-          <div style="display:flex;align-items:flex-end;gap:${groupGap}px;overflow-x:auto;padding-bottom:4px;">${groupsHtml}</div>
-          <div style="display:flex;gap:16px;justify-content:center;margin-top:4px;">${legendHtml}</div>
+        <div class="lieflat-chart-wrap" data-lieflat="bar" style="padding:8px 4px;min-height:180px;">
+          <div style="position:relative;height:${chartH + 24}px;">
+            <div style="display:flex;gap:${groupGap}px;height:100%;">${groupsHtml}</div>
+          </div>
+          <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;height:20px;align-items:center;">${legendHtml}</div>
         </div>
       `;
 
@@ -2609,6 +2616,94 @@ const Util = {
         bar.addEventListener('touchend', handleHide);
         bar.addEventListener('mouseenter', handleShow);
         bar.addEventListener('mouseleave', handleHide);
+      });
+    },
+
+    // 折线图
+    line(container, data, options = {}) {
+      if (!container || !data || data.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-tertiary);text-align:center;padding:16px;">暂无数据</div>';
+        return;
+      }
+      const colors = this.getColors();
+      const series = options.series || [
+        { name: '收入', key: 'income' },
+        { name: '支出', key: 'expense' }
+      ];
+      // 找最大值
+      let maxVal = 1;
+      data.forEach(d => series.forEach(s => { maxVal = Math.max(maxVal, d[s.key] || 0); }));
+      const chartH = 120; // 统一图表区域高度，和柱状图一致
+      const groupGap = 8;
+      const svgW = 360; // 固定 SVG 坐标宽度
+      const paddingX = 15;
+
+      // 生成每列的 HTML（和柱状图结构完全一致，X轴标签用 HTML flex 布局）
+      const columnsHtml = data.map((d, i) => {
+        return `<div class="line-column" data-index="${i}" style="flex:1;display:flex;flex-direction:column;align-items:center;min-width:20px;">
+          <div class="line-chart-area" style="width:100%;height:${chartH}px;position:relative;"></div>
+          <div style="height:20px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-tertiary);margin-top:4px;">${d.month}</div>
+        </div>`;
+      }).join('');
+
+      // 预计算每个点的 x 坐标（固定坐标，不依赖 DOM 渲染）
+      const xPositions = data.map((d, i) => {
+        return paddingX + i * (svgW - paddingX * 2) / (data.length - 1);
+      });
+
+      // 生成 SVG 内容
+      let svgInner = '';
+      series.forEach((s, si) => {
+        const color = colors[si % colors.length];
+        const points = data.map((d, i) => {
+          const val = d[s.key] || 0;
+          const y = chartH - (val / maxVal) * (chartH - 10);
+          return { x: xPositions[i], y, val, name: d.month };
+        });
+        const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ',' + p.y).join(' ');
+        const dotsHtml = points.map((p, i) => `<circle class="lieflat-line-dot" data-index="${i}" data-series="${si}" data-value="${p.val}" data-name="${s.name}" cx="${p.x}" cy="${p.y}" r="3" fill="${color}" style="pointer-events:auto;cursor:pointer;"></circle>`).join('');
+        svgInner += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2"/>${dotsHtml}`;
+      });
+
+      // 图例
+      const legendHtml = series.map((s, si) => {
+        const color = colors[si % colors.length];
+        return `<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary);">
+          <span style="width:10px;height:3px;background:${color};border-radius:2px;display:inline-block;"></span>${s.name}
+        </span>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="lieflat-chart-wrap" data-lieflat="line" style="padding:8px 4px;min-height:180px;">
+          <div style="position:relative;height:${chartH + 24}px;">
+            <div style="display:flex;gap:${groupGap}px;height:100%;">${columnsHtml}</div>
+            <svg class="line-svg-overlay" style="position:absolute;top:0;left:0;width:100%;height:${chartH}px;pointer-events:none;" viewBox="0 0 ${svgW} ${chartH}" preserveAspectRatio="xMidYMid meet">${svgInner}</svg>
+          </div>
+          <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;height:20px;align-items:center;">${legendHtml}</div>
+        </div>
+      `;
+
+      // 绑定 tooltip
+      const dots = container.querySelectorAll('.lieflat-line-dot');
+      dots.forEach(dot => {
+        const handleShow = (e) => {
+          const name = dot.getAttribute('data-name');
+          const value = dot.getAttribute('data-value');
+          let tip = this._tipEl;
+          if (!tip) {
+            tip = document.createElement('div');
+            tip.style.cssText = 'position:fixed;background:#333;color:#fff;padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none;z-index:9999;';
+            this._tipEl = tip;
+          }
+          tip.innerHTML = `<div style="font-weight:600;">${name}</div><div style="color:var(--text-secondary);">${Util.fmtMoney(value)}</div>`;
+          document.body.appendChild(tip);
+          const rect = dot.getBoundingClientRect();
+          tip.style.left = (rect.left + rect.width / 2 - tip.offsetWidth / 2) + 'px';
+          tip.style.top = (rect.top - tip.offsetHeight - 8) + 'px';
+        };
+        const handleHide = () => { if (this._tipEl) this._tipEl.remove(); };
+        dot.addEventListener('mouseenter', handleShow);
+        dot.addEventListener('mouseleave', handleHide);
       });
     }
   },
@@ -5695,30 +5790,44 @@ const UI = {
     const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: month + '-01', endDate: month + '-31', excludeStats: true });
     // 按一级分类聚合
     const incomeByCat = {}, expenseByCat = {};
+    const incomeCountByCat = {}, expenseCountByCat = {};
+    const incomeCatInfo = {}, expenseCatInfo = {};
     let totalIn = 0, totalOut = 0;
     txs.forEach(tx => {
       if (tx.type === 'income' || tx.type === 'reimburse_income') {
-        const cat = Store.getCategory(tx.parentCategoryId) || { name: '其他' };
+        const cat = Store.getCategory(tx.parentCategoryId) || { name: '其他', icon: '💰' };
         incomeByCat[cat.name] = (incomeByCat[cat.name] || 0) + Number(tx.amount);
+        incomeCountByCat[cat.name] = (incomeCountByCat[cat.name] || 0) + 1;
+        incomeCatInfo[cat.name] = { id: cat.id, icon: cat.icon || '💰' };
         totalIn += Number(tx.amount);
       }
       if (tx.type === 'refund' && tx.toAccountId) {
         incomeByCat['退款'] = (incomeByCat['退款'] || 0) + Number(tx.amount);
+        incomeCountByCat['退款'] = (incomeCountByCat['退款'] || 0) + 1;
+        incomeCatInfo['退款'] = { id: null, icon: '↩️' };
         totalIn += Number(tx.amount);
       }
       if (tx.type === 'expense') {
-        const cat = Store.getCategory(tx.parentCategoryId) || { name: '其他' };
+        const cat = Store.getCategory(tx.parentCategoryId) || { name: '其他', icon: '📦' };
         expenseByCat[cat.name] = (expenseByCat[cat.name] || 0) + Number(tx.amount);
+        expenseCountByCat[cat.name] = (expenseCountByCat[cat.name] || 0) + 1;
+        expenseCatInfo[cat.name] = { id: cat.id, icon: cat.icon || '📦' };
         totalOut += Number(tx.amount);
       }
       if (tx.type === 'transfer') {
         // 转出金额计入出账，转入金额计入入账
         expenseByCat['转账转出'] = (expenseByCat['转账转出'] || 0) + Number(tx.amount);
+        expenseCountByCat['转账转出'] = (expenseCountByCat['转账转出'] || 0) + 1;
+        expenseCatInfo['转账转出'] = { id: null, icon: '🔄' };
         incomeByCat['转账转入'] = (incomeByCat['转账转入'] || 0) + Number(tx.amount);
+        incomeCountByCat['转账转入'] = (incomeCountByCat['转账转入'] || 0) + 1;
+        incomeCatInfo['转账转入'] = { id: null, icon: '🔄' };
         totalOut += Number(tx.amount);
         totalIn += Number(tx.amount);
         if (tx.fee) {
           expenseByCat['手续费'] = (expenseByCat['手续费'] || 0) + Number(tx.fee);
+          expenseCountByCat['手续费'] = (expenseCountByCat['手续费'] || 0) + 1;
+          expenseCatInfo['手续费'] = { id: null, icon: '💸' };
           totalOut += Number(tx.fee);
         }
       }
@@ -5737,21 +5846,25 @@ const UI = {
         totalOut += Number(p.amount);
       }
     });
-    const renderBars = (data, total) => {
+    const renderBars = (data, total, countData, catInfo, catType) => {
       const colors = Util.LieflatChart.getColors();
       const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
       return sorted.map(([name, amount], i) => {
         const pct = total > 0 ? (amount / total * 100) : 0;
         const barColor = colors[i % colors.length];
-        return `<div style="margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
-            <span style="display:flex;align-items:center;gap:6px;">
-              <span style="width:8px;height:8px;border-radius:2px;background:${barColor};flex-shrink:0;"></span>
-              ${name}
-            </span>
-            <span style="color:var(--text-secondary);" data-amount>${Util.fmtMoney(amount)} (${pct.toFixed(0)}%)</span>
+        const count = countData ? (countData[name] || 0) : 0;
+        const info = catInfo ? (catInfo[name] || { icon: '📦', id: null }) : { icon: '📦', id: null };
+        return `<div class="cat-bar-item" data-cat-id="${info.id || ''}" data-cat-name="${name}" data-cat-type="${catType}" style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${info.icon}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+              <span style="font-size:14px;font-weight:500;">${name} <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">${count} 笔</span></span>
+              <span style="font-size:13px;color:var(--text-secondary);" data-amount>${Util.fmtMoney(amount)} (${pct.toFixed(0)}%)</span>
+            </div>
+            <div style="height:6px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.5s ease;"></div>
+            </div>
           </div>
-          <div class="progress-bar" style="height:8px;"><div class="fill" style="width:${pct}%;background:${barColor};"></div></div>
         </div>`;
       }).join('');
     };
@@ -5775,10 +5888,10 @@ const UI = {
       </div></div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">入账来源</div>
       <div class="card" id="incomeDonutCard">${totalIn > 0 ? '<div id="incomeDonut"></div>' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无入账</div>'}</div>
-      <div class="card" style="margin-top:8px;">${totalIn > 0 ? renderBars(incomeByCat, totalIn) : ''}</div>
+      <div class="card" style="margin-top:8px;">${totalIn > 0 ? renderBars(incomeByCat, totalIn, incomeCountByCat, incomeCatInfo, 'income') : ''}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">出账去向</div>
       <div class="card" id="expenseDonutCard">${totalOut > 0 ? '<div id="expenseDonut"></div>' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无出账</div>'}</div>
-      <div class="card" style="margin-top:8px;">${totalOut > 0 ? renderBars(expenseByCat, totalOut) : ''}</div>
+      <div class="card" style="margin-top:8px;">${totalOut > 0 ? renderBars(expenseByCat, totalOut, expenseCountByCat, expenseCatInfo, 'expense') : ''}</div>
     `);
 
     // ════ LieflatChart 渲染：资金流向环形图 ════
@@ -5798,6 +5911,15 @@ const UI = {
     if (prevBtn) prevBtn.onclick = () => this.openFlowAnalysis(prevMonth);
     const nextBtn = document.getElementById('flowNextMonth');
     if (nextBtn) nextBtn.onclick = () => this.openFlowAnalysis(nextMonth);
+    // 绑定分类列表点击下钻
+    document.querySelectorAll('.cat-bar-item').forEach(item => {
+      item.onclick = () => {
+        const catId = item.dataset.catId;
+        const catName = item.dataset.catName;
+        if (!catId) return;
+        this.openCategoryDetail(catId, month + '-01', month + '-31', catName);
+      };
+    });
     // 绑定 Tab 切换
     document.querySelectorAll('.review-tab').forEach(tab => {
       tab.onclick = () => {
@@ -5824,9 +5946,11 @@ const UI = {
     const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: weekStart, endDate: weekEnd, excludeStats: true });
     let income = 0, expense = 0;
     const expenseByCat = {}, expenseBySubCat = {}, incomeByCat = {};
+    const expenseCountByCat = {}, expenseCatInfo = {};
+    const expenseSubCountByCat = {}, expenseSubCatInfo = {};
     txs.forEach(tx => {
-      const pcat = Store.getCategory(tx.parentCategoryId) || { name: '其他' };
-      const cat = Store.getCategory(tx.categoryId) || { name: '其他' };
+      const pcat = Store.getCategory(tx.parentCategoryId) || { name: '其他', icon: '📦' };
+      const cat = Store.getCategory(tx.categoryId) || { name: '其他', icon: '📦' };
       if (tx.type === 'income' || tx.type === 'reimburse_income') {
         income += Number(tx.amount);
         incomeByCat[pcat.name] = (incomeByCat[pcat.name] || 0) + Number(tx.amount);
@@ -5834,8 +5958,16 @@ const UI = {
       if (tx.type === 'expense') {
         expense += Number(tx.amount);
         expenseByCat[pcat.name] = (expenseByCat[pcat.name] || 0) + Number(tx.amount);
-        if (!expenseBySubCat[pcat.name]) expenseBySubCat[pcat.name] = {};
+        expenseCountByCat[pcat.name] = (expenseCountByCat[pcat.name] || 0) + 1;
+        expenseCatInfo[pcat.name] = { id: pcat.id, icon: pcat.icon || '📦' };
+        if (!expenseBySubCat[pcat.name]) {
+          expenseBySubCat[pcat.name] = {};
+          expenseSubCountByCat[pcat.name] = {};
+          expenseSubCatInfo[pcat.name] = {};
+        }
         expenseBySubCat[pcat.name][cat.name] = (expenseBySubCat[pcat.name][cat.name] || 0) + Number(tx.amount);
+        expenseSubCountByCat[pcat.name][cat.name] = (expenseSubCountByCat[pcat.name][cat.name] || 0) + 1;
+        expenseSubCatInfo[pcat.name][cat.name] = { id: cat.id, icon: cat.icon || '📦' };
       }
       if (tx.type === 'renqing') {
         if (tx.direction === 'in') {
@@ -5870,16 +6002,30 @@ const UI = {
     }).map(([catName, subs], idx) => {
       const total = Object.values(subs).reduce((s, v) => s + v, 0);
       const pct = expense > 0 ? (total / expense * 100).toFixed(1) : 0;
+      const count = expenseCountByCat[catName] || 0;
+      const info = expenseCatInfo[catName] || { icon: '📦' };
       const subItems = Object.entries(subs).sort((a, b) => b[1] - a[1]).map(([name, amount]) => {
         const subPct = total > 0 ? (amount / total * 100).toFixed(0) : 0;
-        return `<div style="padding:6px 0 6px 20px;font-size:13px;display:flex;justify-content:space-between;border-bottom:1px solid var(--border);">
-          <span style="color:var(--text-secondary);">${name}</span><span data-amount>${Util.fmtMoney(amount)} (${subPct}%)</span>
+        const subCount = expenseSubCountByCat[catName][name] || 0;
+        const subInfo = expenseSubCatInfo[catName][name] || { icon: '📦' };
+        return `<div style="padding:8px 0 8px 52px;font-size:13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">${subInfo.icon}</span>
+          <span style="flex:1;color:var(--text-secondary);">${name} <span style="font-size:11px;color:var(--text-tertiary);">${subCount} 笔</span></span>
+          <span data-amount>${Util.fmtMoney(amount)} (${subPct}%)</span>
         </div>`;
       }).join('');
       return `<div class="subcat-group">
-        <div class="subcat-header" data-idx="${idx}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer;border-bottom:1px solid var(--border);">
-          <span style="font-weight:500;">${catName} <span style="font-size:11px;color:var(--text-tertiary);">▼</span></span>
-          <span data-amount>${Util.fmtMoney(total)} (${pct}%)</span>
+        <div class="subcat-header" data-idx="${idx}" data-cat-id="${info.id || ''}" data-cat-name="${catName}" style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;cursor:pointer;border-bottom:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${info.icon}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+              <span style="font-weight:500;">${catName} <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">${count} 笔</span> <span class="expand-arrow" style="font-size:11px;color:var(--text-tertiary);">▼</span></span>
+              <span style="font-size:13px;color:var(--text-secondary);" data-amount>${Util.fmtMoney(total)} (${pct}%)</span>
+            </div>
+            <div style="height:6px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:var(--primary);border-radius:3px;transition:width 0.5s ease;"></div>
+            </div>
+          </div>
         </div>
         <div class="subcat-body" style="display:none;">${subItems}</div>
       </div>`;
@@ -5976,11 +6122,20 @@ const UI = {
         Util.LieflatChart.donut(document.getElementById('weekExpenseDonut'), expenseData, { centerLabel: '支出' });
       }
       document.querySelectorAll('.subcat-header').forEach(h => {
-        h.onclick = () => {
-          const body = h.nextElementSibling;
-          const arrow = h.querySelector('span span');
-          if (body.style.display === 'none') { body.style.display = 'block'; if (arrow) arrow.textContent = '▲'; }
-          else { body.style.display = 'none'; if (arrow) arrow.textContent = '▼'; }
+        h.onclick = (e) => {
+          // 如果点击的是箭头区域，只展开/收起
+          if (e.target.closest('.expand-arrow')) {
+            const body = h.nextElementSibling;
+            const arrow = h.querySelector('.expand-arrow');
+            if (body.style.display === 'none') { body.style.display = 'block'; if (arrow) arrow.textContent = '▲'; }
+            else { body.style.display = 'none'; if (arrow) arrow.textContent = '▼'; }
+            return;
+          }
+          // 否则，下钻到分类详情页
+          const catId = h.dataset.catId;
+          const catName = h.dataset.catName;
+          if (!catId) return;
+          this.openCategoryDetail(catId, weekStart, weekEnd, catName);
         };
       });
     }, 50);
@@ -5994,18 +6149,30 @@ const UI = {
     const txs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: month + '-01', endDate: month + '-31', excludeStats: true });
     // 按一级分类聚合
     const expenseByCat = {};
+    const expenseCountByCat = {};
+    const expenseCatInfo = {};
     const incomeByCat = {};
     const expenseBySubCat = {};
+    const expenseSubCountByCat = {};
+    const expenseSubCatInfo = {};
     const expenseByAccount = {};
     const expenseByTag = {};
     txs.forEach(tx => {
       if (tx.type === 'expense') {
-        const pcat = Store.getCategory(tx.parentCategoryId) || { name: '其他' };
-        const cat = Store.getCategory(tx.categoryId) || { name: '其他' };
+        const pcat = Store.getCategory(tx.parentCategoryId) || { name: '其他', icon: '📦' };
+        const cat = Store.getCategory(tx.categoryId) || { name: '其他', icon: '📦' };
         const acc = Store.getAccount(tx.accountId) || { name: '未知' };
         expenseByCat[pcat.name] = (expenseByCat[pcat.name] || 0) + Number(tx.amount);
-        if (!expenseBySubCat[pcat.name]) expenseBySubCat[pcat.name] = {};
+        expenseCountByCat[pcat.name] = (expenseCountByCat[pcat.name] || 0) + 1;
+        expenseCatInfo[pcat.name] = { id: pcat.id, icon: pcat.icon || '📦' };
+        if (!expenseBySubCat[pcat.name]) {
+          expenseBySubCat[pcat.name] = {};
+          expenseSubCountByCat[pcat.name] = {};
+          expenseSubCatInfo[pcat.name] = {};
+        }
         expenseBySubCat[pcat.name][cat.name] = (expenseBySubCat[pcat.name][cat.name] || 0) + Number(tx.amount);
+        expenseSubCountByCat[pcat.name][cat.name] = (expenseSubCountByCat[pcat.name][cat.name] || 0) + 1;
+        expenseSubCatInfo[pcat.name][cat.name] = { id: cat.id, icon: cat.icon || '📦' };
         expenseByAccount[acc.name] = (expenseByAccount[acc.name] || 0) + Number(tx.amount);
         (tx.tags || []).forEach(tag => { expenseByTag[tag] = (expenseByTag[tag] || 0) + Number(tx.amount); });
       }
@@ -6072,17 +6239,30 @@ const UI = {
     }).map(([catName, subs], idx) => {
       const total = Object.values(subs).reduce((s, v) => s + v, 0);
       const pct = stats.expense > 0 ? (total / stats.expense * 100).toFixed(1) : 0;
+      const count = expenseCountByCat[catName] || 0;
+      const info = expenseCatInfo[catName] || { icon: '📦' };
       const subItems = Object.entries(subs).sort((a, b) => b[1] - a[1]).map(([name, amount]) => {
         const subPct = total > 0 ? (amount / total * 100).toFixed(0) : 0;
-        return `<div style="padding:6px 0 6px 20px;font-size:13px;display:flex;justify-content:space-between;border-bottom:1px solid var(--border);">
-          <span style="color:var(--text-secondary);">${name}</span>
+        const subCount = expenseSubCountByCat[catName][name] || 0;
+        const subInfo = expenseSubCatInfo[catName][name] || { icon: '📦' };
+        return `<div style="padding:8px 0 8px 52px;font-size:13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">${subInfo.icon}</span>
+          <span style="flex:1;color:var(--text-secondary);">${name} <span style="font-size:11px;color:var(--text-tertiary);">${subCount} 笔</span></span>
           <span data-amount>${Util.fmtMoneyPlain(amount)} (${subPct}%)</span>
         </div>`;
       }).join('');
       return `<div class="subcat-group">
-        <div class="subcat-header" data-idx="${idx}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer;border-bottom:1px solid var(--border);">
-          <span style="font-weight:500;">${catName} <span style="font-size:11px;color:var(--text-tertiary);">▼</span></span>
-          <span data-amount>${Util.fmtMoneyPlain(total)} (${pct}%)</span>
+        <div class="subcat-header" data-idx="${idx}" data-cat-id="${info.id || ''}" data-cat-name="${catName}" style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;cursor:pointer;border-bottom:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${info.icon}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+              <span style="font-weight:500;">${catName} <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">${count} 笔</span> <span class="expand-arrow" style="font-size:11px;color:var(--text-tertiary);">▼</span></span>
+              <span style="font-size:13px;color:var(--text-secondary);" data-amount>${Util.fmtMoneyPlain(total)} (${pct}%)</span>
+            </div>
+            <div style="height:6px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:var(--primary);border-radius:3px;transition:width 0.5s ease;"></div>
+            </div>
+          </div>
         </div>
         <div class="subcat-body" style="display:none;">${subItems}</div>
       </div>`;
@@ -6164,16 +6344,25 @@ const UI = {
         Util.LieflatChart.donut(document.getElementById('monthExpenseDonut'), pieData, { centerLabel: '支出' });
       }
       document.querySelectorAll('.subcat-header').forEach(h => {
-        h.onclick = () => {
-          const body = h.nextElementSibling;
-          const arrow = h.querySelector('span span');
-          if (body.style.display === 'none') {
-            body.style.display = 'block';
-            if (arrow) arrow.textContent = '▲';
-          } else {
-            body.style.display = 'none';
-            if (arrow) arrow.textContent = '▼';
+        h.onclick = (e) => {
+          // 如果点击的是箭头区域，只展开/收起
+          if (e.target.closest('.expand-arrow')) {
+            const body = h.nextElementSibling;
+            const arrow = h.querySelector('.expand-arrow');
+            if (body.style.display === 'none') {
+              body.style.display = 'block';
+              if (arrow) arrow.textContent = '▲';
+            } else {
+              body.style.display = 'none';
+              if (arrow) arrow.textContent = '▼';
+            }
+            return;
           }
+          // 否则，下钻到分类详情页
+          const catId = h.dataset.catId;
+          const catName = h.dataset.catName;
+          if (!catId) return;
+          this.openCategoryDetail(catId, month + '-01', month + '-31', catName);
         };
       });
     }, 50);
@@ -6196,14 +6385,24 @@ const UI = {
     // 年度分类聚合
     const yearTxs = Store.filterTransactions({ ledgerId: Store.state.currentLedgerId, startDate: year + '-01-01', endDate: year + '-12-31', excludeStats: true });
     const expenseByCat = {}, incomeByCat = {}, expenseBySubCat = {}, expenseByAccount = {};
+    const expenseCountByCat = {}, expenseCatInfo = {};
+    const expenseSubCountByCat = {}, expenseSubCatInfo = {};
     yearTxs.forEach(tx => {
-      const pcat = Store.getCategory(tx.parentCategoryId) || { name: '其他' };
-      const cat = Store.getCategory(tx.categoryId) || { name: '其他' };
+      const pcat = Store.getCategory(tx.parentCategoryId) || { name: '其他', icon: '📦' };
+      const cat = Store.getCategory(tx.categoryId) || { name: '其他', icon: '📦' };
       const acc = Store.getAccount(tx.accountId) || { name: '未知' };
       if (tx.type === 'expense') {
         expenseByCat[pcat.name] = (expenseByCat[pcat.name] || 0) + Number(tx.amount);
-        if (!expenseBySubCat[pcat.name]) expenseBySubCat[pcat.name] = {};
+        expenseCountByCat[pcat.name] = (expenseCountByCat[pcat.name] || 0) + 1;
+        expenseCatInfo[pcat.name] = { id: pcat.id, icon: pcat.icon || '📦' };
+        if (!expenseBySubCat[pcat.name]) {
+          expenseBySubCat[pcat.name] = {};
+          expenseSubCountByCat[pcat.name] = {};
+          expenseSubCatInfo[pcat.name] = {};
+        }
         expenseBySubCat[pcat.name][cat.name] = (expenseBySubCat[pcat.name][cat.name] || 0) + Number(tx.amount);
+        expenseSubCountByCat[pcat.name][cat.name] = (expenseSubCountByCat[pcat.name][cat.name] || 0) + 1;
+        expenseSubCatInfo[pcat.name][cat.name] = { id: cat.id, icon: cat.icon || '📦' };
         expenseByAccount[acc.name] = (expenseByAccount[acc.name] || 0) + Number(tx.amount);
       }
       if (tx.type === 'income' || tx.type === 'reimburse_income') {
@@ -6227,15 +6426,30 @@ const UI = {
     }).map(([catName, subs], idx) => {
       const total = Object.values(subs).reduce((s, v) => s + v, 0);
       const pct = totalExpense > 0 ? (total / totalExpense * 100).toFixed(1) : 0;
+      const count = expenseCountByCat[catName] || 0;
+      const info = expenseCatInfo[catName] || { icon: '📦' };
       const subItems = Object.entries(subs).sort((a, b) => b[1] - a[1]).map(([name, amount]) => {
         const subPct = total > 0 ? (amount / total * 100).toFixed(0) : 0;
-        return `<div style="padding:6px 0 6px 20px;font-size:13px;display:flex;justify-content:space-between;border-bottom:1px solid var(--border);">
-          <span style="color:var(--text-secondary);">${name}</span><span data-amount>${Util.fmtMoney(amount)} (${subPct}%)</span></div>`;
+        const subCount = expenseSubCountByCat[catName][name] || 0;
+        const subInfo = expenseSubCatInfo[catName][name] || { icon: '📦' };
+        return `<div style="padding:8px 0 8px 52px;font-size:13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;">${subInfo.icon}</span>
+          <span style="flex:1;color:var(--text-secondary);">${name} <span style="font-size:11px;color:var(--text-tertiary);">${subCount} 笔</span></span>
+          <span data-amount>${Util.fmtMoney(amount)} (${subPct}%)</span>
+        </div>`;
       }).join('');
       return `<div class="subcat-group">
-        <div class="subcat-header" data-idx="${idx}" style="display:flex;justify-content:space-between;padding:10px 0;cursor:pointer;border-bottom:1px solid var(--border);">
-          <span style="font-weight:500;">${catName} <span style="font-size:11px;color:var(--text-tertiary);">▼</span></span>
-          <span data-amount>${Util.fmtMoney(total)} (${pct}%)</span>
+        <div class="subcat-header" data-idx="${idx}" data-cat-id="${info.id || ''}" data-cat-name="${catName}" style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;cursor:pointer;border-bottom:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${info.icon}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+              <span style="font-weight:500;">${catName} <span style="font-size:11px;color:var(--text-tertiary);font-weight:400;">${count} 笔</span> <span class="expand-arrow" style="font-size:11px;color:var(--text-tertiary);">▼</span></span>
+              <span style="font-size:13px;color:var(--text-secondary);" data-amount>${Util.fmtMoney(total)} (${pct}%)</span>
+            </div>
+            <div style="height:6px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:var(--primary);border-radius:3px;transition:width 0.5s ease;"></div>
+            </div>
+          </div>
         </div><div class="subcat-body" style="display:none;">${subItems}</div></div>`;
     }).join('');
     // 理财成绩
@@ -6305,8 +6519,20 @@ const UI = {
         <div><div style="font-size:12px;color:var(--text-secondary)">年结余</div><div style="font-size:20px;font-weight:700;margin-top:4px;" data-amount>${Util.fmtMoney(totalIncome - totalExpense)}</div></div>
       </div>
       <div style="margin-top:8px;font-size:13px;color:var(--text-secondary);text-align:center;">储蓄率：${totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome * 100).toFixed(0) : 0}%</div></div>
-      <div class="card"><div class="card-title" style="margin-bottom:8px;">月度收支趋势</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:0 12px;">
+          <div style="flex:1;">
+            <div class="card-title" style="margin-bottom:2px;">月度收支趋势</div>
+            <div style="font-size:11px;color:var(--text-tertiary);">月平均支出 ¥${Util.fmtMoneyPlain(totalExpense / 12)}</div>
+          </div>
+          <div style="display:flex;background:var(--bg-secondary);border-radius:999px;padding:3px;gap:2px;flex-shrink:0;margin-left:12px;">
+            <button class="trend-type-btn active" data-type="bar" style="border:none;background:#fff;padding:5px 12px;font-size:11px;border-radius:999px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);color:var(--text-primary);transition:all 0.2s ease;">柱状图</button>
+            <button class="trend-type-btn" data-type="line" style="border:none;background:transparent;padding:5px 12px;font-size:11px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.2s ease;">折线图</button>
+          </div>
+        </div>
+        <div style="border-top: 2px dashed var(--border);margin: 8px 0;"></div>
         <div id="yearTrendChart"></div>
+      </div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">收入分类占比</div>
       <div class="card" id="yearIncomeDonut">${totalIncome > 0 ? '' : '<div style="color:var(--text-tertiary);text-align:center;padding:12px;">暂无收入</div>'}</div>
       <div style="padding:8px 16px;font-size:14px;font-weight:600;">支出分类占比</div>
@@ -6365,22 +6591,147 @@ const UI = {
         const expenseData = Object.entries(expenseByCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
         Util.LieflatChart.donut(document.getElementById('yearExpenseDonut'), expenseData, { centerLabel: '支出' });
       }
-      // 渲染年复盘月度收支趋势柱状图
-      Util.LieflatChart.bar(document.getElementById('yearTrendChart'), yearTrendData, {
-        series: [{ name: '收入', key: 'income' }, { name: '支出', key: 'expense' }]
+      // 渲染年复盘月度收支趋势图
+      const renderTrend = (type) => {
+        const el = document.getElementById('yearTrendChart');
+        if (type === 'line') {
+          Util.LieflatChart.line(el, yearTrendData, {
+            series: [{ name: '收入', key: 'income' }, { name: '支出', key: 'expense' }]
+          });
+        } else {
+          Util.LieflatChart.bar(el, yearTrendData, {
+            series: [{ name: '收入', key: 'income' }, { name: '支出', key: 'expense' }]
+          });
+        }
+      };
+      renderTrend('bar');
+      // 绑定趋势图类型切换
+      const updateTrendBtnStyles = () => {
+        document.querySelectorAll('.trend-type-btn').forEach(b => {
+          if (b.classList.contains('active')) {
+            b.style.background = '#fff';
+            b.style.color = 'var(--text-primary)';
+            b.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+          } else {
+            b.style.background = 'transparent';
+            b.style.color = 'var(--text-secondary)';
+            b.style.boxShadow = 'none';
+          }
+        });
+      };
+      document.querySelectorAll('.trend-type-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.trend-type-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          updateTrendBtnStyles();
+          const type = btn.dataset.type;
+          renderTrend(type);
+        };
       });
       document.querySelectorAll('.subcat-header').forEach(h => {
-        h.onclick = () => {
-          const body = h.nextElementSibling;
-          const arrow = h.querySelector('span span');
-          if (body.style.display === 'none') { body.style.display = 'block'; if (arrow) arrow.textContent = '▲'; }
-          else { body.style.display = 'none'; if (arrow) arrow.textContent = '▼'; }
+        h.onclick = (e) => {
+          // 如果点击的是箭头区域，只展开/收起
+          if (e.target.closest('.expand-arrow')) {
+            const body = h.nextElementSibling;
+            const arrow = h.querySelector('.expand-arrow');
+            if (body.style.display === 'none') { body.style.display = 'block'; if (arrow) arrow.textContent = '▲'; }
+            else { body.style.display = 'none'; if (arrow) arrow.textContent = '▼'; }
+            return;
+          }
+          // 否则，下钻到分类详情页
+          const catId = h.dataset.catId;
+          const catName = h.dataset.catName;
+          if (!catId) return;
+          this.openCategoryDetail(catId, year + '-01-01', year + '-12-31', catName);
         };
       });
     }, 50);
   },
 
-  // ===== 撤销快照 =====
+  // 分类流水详情页（点击分类下钻）
+  openCategoryDetail(catId, startDate, endDate, title = '分类明细') {
+    const cat = Store.getCategory(catId) || { name: '未知分类', icon: '📦' };
+    const txs = Store.filterTransactions({
+      ledgerId: Store.state.currentLedgerId,
+      startDate: startDate,
+      endDate: endDate,
+      excludeStats: true
+    }).filter(tx => tx.parentCategoryId === catId || tx.categoryId === catId);
+    
+    // 按一级分类过滤（如果是一级分类）
+    const isParent = !cat.parentId;
+    const filteredTxs = isParent 
+      ? txs.filter(tx => tx.parentCategoryId === catId)
+      : txs.filter(tx => tx.categoryId === catId);
+    
+    const totalAmount = filteredTxs.reduce((s, tx) => s + Number(tx.amount), 0);
+    const count = filteredTxs.length;
+    
+    // 按日期分组
+    const grouped = {};
+    filteredTxs.sort((a, b) => b.date.localeCompare(a.date)).forEach(tx => {
+      if (!grouped[tx.date]) grouped[tx.date] = [];
+      grouped[tx.date].push(tx);
+    });
+    
+    // 渲染流水列表
+    const txListHtml = Object.entries(grouped).map(([date, dayTxs]) => {
+      const dayIncome = dayTxs.filter(t => t.type === 'income' || t.type === 'reimburse_income').reduce((s, t) => s + Number(t.amount), 0);
+      const dayExpense = dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
+      const d = new Date(date);
+      const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+      const dateLabel = `${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日 星期${weekDays[d.getDay()]}`;
+      
+      const txItems = dayTxs.map(tx => {
+        const acc = Store.getAccount(tx.accountId) || { name: '未知账户' };
+        const subCat = Store.getCategory(tx.categoryId) || { name: '', icon: '' };
+        const pcat = Store.getCategory(tx.parentCategoryId) || { name: '', icon: '' };
+        const icon = subCat.icon || pcat.icon || cat.icon || '📦';
+        const typeLabel = subCat.name && subCat.name !== pcat.name ? subCat.name : (tx.note || '');
+        const amountCls = (tx.type === 'income' || tx.type === 'reimburse_income') ? 'var(--success)' : 'var(--danger)';
+        const sign = (tx.type === 'income' || tx.type === 'reimburse_income') ? '+' : '-';
+        return `<div class="tx-item" data-tx-id="${tx.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;">
+          <span style="font-size:20px;">${icon}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${typeLabel || cat.name}</div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">${acc.name}${tx.note ? ' · ' + tx.note : ''}</div>
+          </div>
+          <span style="font-weight:600;color:${amountCls};" data-amount>${sign}${Util.fmtMoneyPlain(tx.amount)}</span>
+        </div>`;
+      }).join('');
+      
+      return `<div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;color:var(--text-secondary);">
+          <span>${dateLabel}</span>
+          <span>↑ <span style="color:var(--success);">${Util.fmtMoney(dayIncome)}</span> ↓ <span style="color:var(--danger);">${Util.fmtMoney(dayExpense)}</span></span>
+        </div>
+        <div class="card" style="padding:0 12px;">${txItems}</div>
+      </div>`;
+    }).join('');
+    
+    Router.openSubpage(title, `
+      <div style="padding:20px 16px;text-align:center;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px;">${cat.icon}</div>
+        <div style="font-size:20px;font-weight:700;color:var(--primary);margin-bottom:8px;">${cat.name}</div>
+        <div style="font-size:14px;color:var(--text-secondary);">总计：<span style="font-weight:600;" data-amount>¥${Util.fmtMoneyPlain(totalAmount)}</span> 共：<span style="font-weight:600;">${count}</span> 笔</div>
+      </div>
+      <div style="padding:0 16px 16px;">
+        ${txListHtml || '<div style="color:var(--text-tertiary);text-align:center;padding:40px 0;">暂无流水</div>'}
+      </div>
+    `);
+    
+    // 绑定流水点击事件
+    setTimeout(() => {
+      document.querySelectorAll('.tx-item').forEach(item => {
+        item.onclick = () => {
+          const txId = item.dataset.txId;
+          this.editTransaction(txId);
+        };
+      });
+    }, 50);
+    // 记录当前分类详情页参数，保存流水后自动刷新
+    this._currentCategoryDetail = { catId, startDate, endDate, title };
+  },
   captureSnapshot() {
     try {
       const snap = {
@@ -8369,6 +8720,11 @@ const UI = {
         if (document.getElementById('page-home').classList.contains('active')) this.renderHome();
         if (document.getElementById('page-assets').classList.contains('active')) this.renderAssets();
       } catch(e) {}
+      // 如果当前在分类详情页，自动刷新
+      if (this._currentCategoryDetail) {
+        const params = this._currentCategoryDetail;
+        this.openCategoryDetail(params.catId, params.startDate, params.endDate, params.title);
+      }
     }, 300);
   },
 };
@@ -8729,6 +9085,11 @@ const AddSheet = {
     UI.renderHome();
     UI.renderTransactions();
     UI.renderAssets();
+    // 如果当前在分类详情页，自动刷新
+    if (UI._currentCategoryDetail) {
+      const params = UI._currentCategoryDetail;
+      UI.openCategoryDetail(params.catId, params.startDate, params.endDate, params.title);
+    }
   },
 
   async openForEdit(txId) {
