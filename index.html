@@ -5757,11 +5757,11 @@ const UI = {
     };
     Router.openSubpage('资金流向', `
       <div style="padding:8px 16px;">
-        <div style="display:flex;background:var(--bg-secondary);border-radius:20px;padding:3px;gap:2px;">
-          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;background:var(--primary);color:#fff;font-weight:600;">资金流向</div>
-          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">周复盘</div>
-          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">月复盘</div>
-          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">年复盘</div>
+        <div style="display:flex;background:var(--bg-secondary);border-radius:999px;padding:4px;gap:2px;">
+          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);color:var(--text-primary);font-weight:600;transition:all 0.3s ease;">资金流向</div>
+          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">周复盘</div>
+          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">月复盘</div>
+          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">年复盘</div>
         </div>
       </div>
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
@@ -5802,6 +5802,10 @@ const UI = {
     document.querySelectorAll('.review-tab').forEach(tab => {
       tab.onclick = () => {
         const t = tab.dataset.tab;
+        // 清空栈，避免 Tab 切换层层压栈，返回时直接回到主页面
+        Router._restoring = true; // Tab切换时不压栈，避免返回需多次点击
+        // 清空栈，避免 Tab 切换层层压栈，返回时直接回到主页面
+        Router._restoring = true; // Tab切换时不压栈，避免返回需多次点击
         if (t === 'flow') this.openFlowAnalysis(month);
         else if (t === 'week') this.openWeekReview();
         else if (t === 'month') this.openMonthReview(month);
@@ -5915,11 +5919,11 @@ const UI = {
     };
     Router.openSubpage('周度复盘', `
       <div style="padding:8px 16px;">
-        <div style="display:flex;background:var(--bg-secondary);border-radius:20px;padding:3px;gap:2px;">
-          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">资金流向</div>
-          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;background:var(--primary);color:#fff;font-weight:600;">周复盘</div>
-          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">月复盘</div>
-          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">年复盘</div>
+        <div style="display:flex;background:var(--bg-secondary);border-radius:999px;padding:4px;gap:2px;">
+          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">资金流向</div>
+          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);color:var(--text-primary);font-weight:600;transition:all 0.3s ease;">周复盘</div>
+          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">月复盘</div>
+          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">年复盘</div>
         </div>
       </div>
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
@@ -5954,6 +5958,8 @@ const UI = {
       document.querySelectorAll('.review-tab').forEach(tab => {
         tab.onclick = () => {
           const t = tab.dataset.tab;
+        // 清空栈，避免 Tab 切换层层压栈，返回时直接回到主页面
+        Router._restoring = true; // Tab切换时不压栈，避免返回需多次点击
           if (t === 'flow') this.openFlowAnalysis();
           else if (t === 'week') this.openWeekReview(offsetWeeks);
           else if (t === 'month') this.openMonthReview();
@@ -6083,11 +6089,11 @@ const UI = {
     }).join('');
     Router.openSubpage('月度复盘', `
       <div style="padding:8px 16px;">
-        <div style="display:flex;background:var(--bg-secondary);border-radius:20px;padding:3px;gap:2px;">
-          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">资金流向</div>
-          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">周复盘</div>
-          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;background:var(--primary);color:#fff;font-weight:600;">月复盘</div>
-          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">年复盘</div>
+        <div style="display:flex;background:var(--bg-secondary);border-radius:999px;padding:4px;gap:2px;">
+          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">资金流向</div>
+          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">周复盘</div>
+          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);color:var(--text-primary);font-weight:600;transition:all 0.3s ease;">月复盘</div>
+          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">年复盘</div>
         </div>
       </div>
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
@@ -6141,6 +6147,8 @@ const UI = {
       document.querySelectorAll('.review-tab').forEach(tab => {
         tab.onclick = () => {
           const t = tab.dataset.tab;
+        // 清空栈，避免 Tab 切换层层压栈，返回时直接回到主页面
+        Router._restoring = true; // Tab切换时不压栈，避免返回需多次点击
           if (t === 'flow') this.openFlowAnalysis(month);
           else if (t === 'week') this.openWeekReview();
           else if (t === 'month') this.openMonthReview(month);
@@ -6279,11 +6287,11 @@ const UI = {
 
     Router.openSubpage('年度复盘', `
       <div style="padding:8px 16px;">
-        <div style="display:flex;background:var(--bg-secondary);border-radius:20px;padding:3px;gap:2px;">
-          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">资金流向</div>
-          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">周复盘</div>
-          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;color:var(--text-secondary);">月复盘</div>
-          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:6px 0;font-size:13px;border-radius:18px;cursor:pointer;background:var(--primary);color:#fff;font-weight:600;">年复盘</div>
+        <div style="display:flex;background:var(--bg-secondary);border-radius:999px;padding:4px;gap:2px;">
+          <div class="review-tab" data-tab="flow" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">资金流向</div>
+          <div class="review-tab" data-tab="week" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">周复盘</div>
+          <div class="review-tab" data-tab="month" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;color:var(--text-secondary);transition:all 0.3s ease;">月复盘</div>
+          <div class="review-tab" data-tab="year" style="flex:1;text-align:center;padding:7px 0;font-size:13px;border-radius:999px;cursor:pointer;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.1);color:var(--text-primary);font-weight:600;transition:all 0.3s ease;">年复盘</div>
         </div>
       </div>
       <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0;">
@@ -6340,6 +6348,8 @@ const UI = {
       document.querySelectorAll('.review-tab').forEach(tab => {
         tab.onclick = () => {
           const t = tab.dataset.tab;
+        // 清空栈，避免 Tab 切换层层压栈，返回时直接回到主页面
+        Router._restoring = true; // Tab切换时不压栈，避免返回需多次点击
           if (t === 'flow') this.openFlowAnalysis();
           else if (t === 'week') this.openWeekReview();
           else if (t === 'month') this.openMonthReview();
